@@ -13,15 +13,13 @@
 <img src="./assets/teaser.png"/>
 
  **LangSuit⋅E** is a systematic and simulation-free testbed for evaluating embodied capabilities of large language models (LLMs) across different tasks in embodied textual worlds. The highlighted features include:
- - **Simluation-Free Embodied Environments**: The testbed provides a general simulation-free textual world that supports most embodied tasks, including navigation, manipulation, and communications. The environment is based on [Gymnasium](https://gymnasium.farama.org/index.html) and inherits the design patterns.
+ - **Embodied Textual Environments**: The testbed provides a general simulation-free textual world that supports most embodied tasks, including navigation, manipulation, and communications. The environment is based on [Gymnasium](https://gymnasium.farama.org/index.html) and inherits the design patterns.
  - **Embodied Observations and Actions**: All agents' observations are designed to be embodied with customizable `max_view_distance`, `max_manipulate_distance`, `focal_length`, *etc*.
  - **Customizable Embodied Agents**: The agents in LangSuit⋅E are fully-customizable *w.r.t* their action spaces and communicative capabilities, *i.e.*, one can easily adapt the communication and acting strategy from one task to another.
  - **Multi-agent Cooperation**: The testbed supports planning, acting and communication among multiple agents, where each agent can be customized to have different configurations.
  - **Human-agent Communication**: Besides communication between agents, the testbed supports communication and cooperation between humans and agents.
  - **Full support to [LangChain](https://www.langchain.com/) library**: The LangSuitE testbed supports full usage of API language models, Open-source language models, tool usages, Chain-of-Thought (CoT) strategies, *etc.*.
  - **Expert Trajectory Generation**: We provide expert trajectory generation algorithms for most tasks.
-
-
 
 
 ## Table of Contents
@@ -33,6 +31,7 @@
   - [Task Configuration](#task-configuration)
   - [Prompt Template](#prompt-template)
 - [📝 Citation](#-citation)
+- [📄 Acknowledgements](#-acknowledgements)
 
 
 ## 📦 Benchmark and Dataset
@@ -238,3 +237,6 @@ If you find our work useful, please cite
 ```
 
 For any questions and issues, please contact [nlp@bigai.ai](mailto:nlp@bigai.ai).
+
+## 📄 Acknowledgements
+ Some of the tasks of LangSuit⋅E are based on the datasets and source-code proposed by previous researchers, including [BabyAI](https://github.com/Farama-Foundation/Minigrid), [AI2Thor](https://github.com/allenai/ai2thor-rearrangement), [ALFred](https://github.com/askforalfred/alfred), [TEAch](https://github.com/alexa/teach), [CWAH](https://vis-www.cs.umass.edu/Co-LLM-Agents/).
