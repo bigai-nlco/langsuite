@@ -1,0 +1,36 @@
+task: CwahTask:Cwah2DEnv
+template: ./langsuite/envs/cwah/templates/cwah_react.json
+dataroot: ./data/cwah/
+num_agents: 2
+env:
+  type: Cwah2DEnv
+
+world:
+  type: CwahWorld
+  id: test_Cwah_world
+  grid_size: 0.25
+
+
+agents:
+  - type: CWAHAgentReact
+    agent_id: 0
+    name: Alice
+    position: 'random'
+    inventory_capacity: 2
+    focal_length: 10
+    max_manipulate_distance: 2
+    max_view_distance: 2
+    step_size: 0.25
+    llm:
+      llm_type: "AzureChatOpenAI"
+  - type: CWAHAgentReact
+    agent_id: 1
+    name: Bob
+    position: 'random'
+    inventory_capacity: 2
+    focal_length: 10
+    max_manipulate_distance: 2
+    max_view_distance: 2
+    step_size: 0.25
+    llm:
+      llm_type: "AzureChatOpenAI"

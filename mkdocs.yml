@@ -1,0 +1,50 @@
+site_name: langsuite
+repo_url: https://github.com/bigai-nlco/langsuite
+repo_name: bigai-nlco/langsuite
+copyright: Copyright &copy; 2023 BIGAI
+site_dir: public
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - content.tabs.link
+  logo: assets/icons8-houses-96.png
+  favicon: assets/logo-64.png
+  palette:
+    scheme: bigai
+  icon:
+    repo: fontawesome/brands/github
+
+extra_css:
+  - css/extra.css
+
+plugins:
+  - search
+  - autorefs
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [langsuite]
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+
+nav:
+  - Home:
+    - Home: index.md
+    - Quickstart: quickstart.md
+    - API: apis/index.md
+  - Quickstart: quickstart.md
+  - API:
+    - API: apis/index.md

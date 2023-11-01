@@ -1,0 +1,128 @@
+{
+    "intro": {
+        "default": [
+            "You are an autonomous intelligent agent tasked with completing a minigrid game. These tasks will be accomplished through the use of specific actions you can issue. \n\nHere's the information you'll have: \nTask: This is the task you are trying to accomplish.\nObs: These are the objects you can see.You can see at most {max_view_steps} step(s) in front of you, {side_steps} step(s) on your left, {side_steps} step(s) on your right. \n Manipulable object: The object that you are facing and you can take an operate action like pick_up [object_name], toggle [object_name] on it. \nInventory: These are the objects you are holding, and you can take an action like drop on it.\nFeedback: Whether the action is succeed or not and why is it.\n\nAt each step, you can choose to think your plan or execute an action from one of the following: \n`move_ahead`: it means you move ahead by 1 step.\n`turn_left`: it means you turn left 90 degrees.\n`turn_right`: it means you turn right 90 degrees.\n`pick_up [object_name]`: Use this action to pick up a pickupable and visible object directly in front of you without obstacle.\n`drop [object_name]`: it means you places the object in hand at the place just in front of you.\n`toggle [object_name]`: it means you toggle a toggleable and visible object directly in front of you without obstacle.\n`stop [answer]`: Issue this action when you believe the task is complete. If you believe the task is impossible to complete, provide the answer as \"N/A\" in the bracket.\n\nTo be successful, it is very important to follow the following rules:\n1. You should only issue a action or your thought that is valid given the current observation\n2. You should only issue ONE action at a time, and ONLY action is enough.\n3. Generate the action in the correct format starting with \"Act:\". For example, \"Act: pick_up [cup_0]\".\n4. State your thought or think process starting with \"Thought:\"\n5. You can only operate the object you are facing, if the object is in front of you, on your left or right, take action like move_ahead, turn_left, turn_right to appraoch it until you are facing it;\n6. Issue stop action when you think you have achieved the objective. Don't generate anything after stop.\n\nHere are some examples:\n{example}\nRespond YES if you can play this game."
+        ]
+    },
+    "InvalidAction": {
+        "failure.actionNotFound": [
+            "Feedback: Action failed. There is no valid action in your response. Please generate action in a correct format. You must put action arguments in brackets. For example, `move_ahead`, `turn_left`, `turn_right`, `pick_up [object_name]`, `drop`, `toggle [object_name]`."
+        ],
+        "failure.multipleActions": [
+            "Feedback: Action failed. I found multiple actions in your response, please only respond with one action at a time. For example, \"Act: move_ahead\""
+        ],
+        "failure.invalidObjectName": [
+            "Feedback: Action failed. There is no the object \"{object}\" in your view space. Please operate the object in sight.\nObs: {observation}"
+        ],
+        "failure.objectNotProvide": [
+            "Feedback: Action failed. You did not provide a valid object name, neither the object is not provided nor exist. Please generate action in a correct format. You must put action arguments in brackets. For example, `pick_up [red ball]`, `drop [key]`, `toggle [yellow door]`.\nObs: {observation}"
+        ],
+        "failure.objectNotExist": [
+            "Feedback: Action failed. There is no object \"{object}\" existing. Please operate the object in sight.\nObs: {observation}"
+        ],
+        "failure.objectNotInView": [
+            "Feedback: Action failed. You can not see {object} in your view space.\nObs: {observation}"
+        ]
+    },
+    "example": {
+        "default": [
+            "Task: go to the red box. \nObs:You can see a blue key in front of you; You can see a red box on your right. \nManipulable object: A blue key.\n>Thought: To solve this task, I need to find a red box. There is a blue key just before me and blocked my way. The red box is on my right, so I should turn_right first to go to the red box.\n>Act: turn_right."
+        ]
+    },
+    "example1": {
+        "default": [
+            "Task: go to the red box. \nObs:You can see nothing ahead.\n>Thought: To solve this task, I need to find a red box.\nOK.\n>Act: move_ahead \nFeedback: Action succeeded. Moved forward by 1 step.\nObs: You see nothing ahead.\nAct: move_ahead \nFeedback: Action failed. Can not move ahead, because there is an obstacle ahead.\nObs: You see nothing ahead.\n>Thought: Now I cannot move ahead. Next I will try to look around.\nOK.\n>Act: turn_right \nFeedback: Action succeeded. Turned right by '90' degrees.\nObs: You see a red box.\n>Thought: Now I find the red box. Next I need to go to it.\n>Act: move_ahead \nFeedback: Action succeeded. Moved forward by 1 step.\nObs: You can see a red box.\n>Act: move_ahead()\nFeedback: Action failed. Can not move ahead, because there is an obstacle ahead. \nObs:You can see a red box.\n>Act: stop[]."
+        ]
+    },
+    "BabyAIStart": {
+        "default": [
+            "Task: {task}\nObs: {observation}\nWhat is your next step? "
+        ]
+    },
+    "BabyAIStop": {
+        "default": [
+            "You stopped the game."
+        ],
+        "success": [
+            "[SUCCESS] You have completed the task. Congratulations!"
+        ],
+        "failure": [
+            "[FAIL] You failed to complete the task."
+        ]
+    },
+    "BabyAIMoveAhead": {
+        "success.default": [
+            "Feedback: Action succeeded. Moved forward by 1 step.\nObs: {observation}"
+        ],
+        "success.done": [
+            "Game is over."
+        ],
+        "failure.isBlocked": [
+            "Feedback: Action failed. Can not move ahead, because there is an obstacle ahead.\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed.\nObs: {observation}"
+        ],
+        "default": [
+            "Feedback: Action succeeded.\nObs: {observation}"
+        ]
+    },
+    "BabyAITurnLeft": {
+        "success.default": [
+            "Feedback: Action succeeded. Turned left by '90' degrees.\nObs: {observation}"
+        ]
+    },
+    "BabyAITurnRight": {
+        "success.default": [
+            "Feedback: Action succeeded. Turned right by '90' degrees.\nObs: {observation}"
+        ]
+    },
+    "BabyAIPickUp": {
+        "success.default": [
+            "Feedback: Action succeeded. You picked a {object} up.\nInventory: {inventory}\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to pick up {object}. You can only pickup the object one step in front of you without obstacle.\nObs: {observation}"
+        ],
+        "failure.notInView": [
+            "Feedback: Action failed. Object {object} is not in view space.\nObs: {observation}"
+        ],
+        "failure.intentoryFilled": [
+            "Feedback: Action failed. You have already held enough object(s), drop one before you pick up another one. \nInventory: {inventory}\nObs: {observation}"
+        ],
+        "failure.isBlocked": [
+            "Feedback: Action failed. Can not pickup, blocked by a {object}. You can only pickup the object direct in front of you without obstacle. \nObs: {observation}"
+        ]
+    },
+    "BabyAIDrop": {
+        "success.default": [
+            "Feedback: Action succeeded. You dropped {object}.\nInventory: {inventory}\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to drop {object}.\nObs: {observation}"
+        ],
+        "failure.emptyInventory": [
+            "Feedback: Action failed. Inventory is empty, nothing to drop.\nObs: {observation}"
+        ],
+        "failure.objectNotInInventory": [
+            "Feedback: Action failed. Object {object} is not in your inventory.\nInventory: {inventory}."
+        ]
+    },
+    "BabyAIToggle": {
+        "success.default": [
+            "Feedback: Action succeeded. You toggled {object}.\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to toggle {object}.\nObs: {observation}"
+        ],
+        "failure.notInView": [
+            "Feedback: Action failed. Object {object} is not in view space.\nObs: {observation}"
+        ],
+        "failure.notToggleable": [
+            "Feedback: Action failed. Object {object} is not toggleable.\nObs: {observation}"
+        ],
+        "failure.isBlocked": [
+            "Feedback: Action failed. Can not toggle, blocked by a {object}. You can only toggle the object direct in front of you without obstacle. \nObs: {observation}"
+        ]
+    }
+}
