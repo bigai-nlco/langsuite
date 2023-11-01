@@ -6,6 +6,7 @@ import json
 from copy import deepcopy
 from math import floor
 from pathlib import Path
+
 from tqdm import tqdm
 
 from langsuite.actions import get_action
@@ -21,14 +22,14 @@ from langsuite.utils.template_builder import TemplateBuilder
 
 def load_data(data_dir, stage, subset=10):
     """
-        Load TEACh (TEACh: Task-driven Embodied Agents that Chat) data from a specified directory.
+    Load TEACh (TEACh: Task-driven Embodied Agents that Chat) data from a specified directory.
 
-        Args:
-            data_dir (str): The directory containing TEACh data files.
-            stage (str): Classification of data.
+    Args:
+        data_dir (str): The directory containing TEACh data files.
+        stage (str): Classification of data.
 
-        Returns:
-            list: One of task data dictionaries.
+    Returns:
+        list: One of task data dictionaries.
     """
     teach_train_data = []
     teach_paths = Path(
@@ -158,13 +159,13 @@ class TeachTask(BaseTask):
 
     def step(self, action_dict):
         """
-            Perform a step in the environment based on given actions.
+        Perform a step in the environment based on given actions.
 
-            Args:
-                action_dict (dict or str): Actions to be taken by agents in the environment.
+        Args:
+            action_dict (dict or str): Actions to be taken by agents in the environment.
 
-            Returns:
-                tuple: Observation, reward, done flag, and additional information.
+        Returns:
+            tuple: Observation, reward, done flag, and additional information.
         """
         if type(action_dict) == dict:
             if len(action_dict) == 0:
@@ -203,13 +204,13 @@ class TeachTask(BaseTask):
 
     def _determine_stop(self, cur_info):
         """
-            Determine if the agent should stop based on stop criteria.
+        Determine if the agent should stop based on stop criteria.
 
-            Args:
-                cur_info: Current information or state for stop criterion evaluation.
+        Args:
+            cur_info: Current information or state for stop criterion evaluation.
 
-            Returns:
-                bool: True if any stop criterion is met, False otherwise.
+        Returns:
+            bool: True if any stop criterion is met, False otherwise.
         """
         for cur_agent_info in cur_info["n"]:
             if cur_agent_info is None:

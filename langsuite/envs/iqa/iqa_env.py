@@ -70,29 +70,29 @@ class Iqa2DEnv(LangSuiteEnv):
     @property
     def is_multi_agent(self):
         """
-            Determines if there are multiple agents.
+        Determines if there are multiple agents.
 
-            Returns:
-                bool: True if the number of agents is greater than 1, False otherwise.
+        Returns:
+            bool: True if the number of agents is greater than 1, False otherwise.
         """
         return len(self.agents) > 1
 
     @property
     def is_terminated(self):
         """
-            Checks if the action is terminated.
+        Checks if the action is terminated.
 
-            Returns:
-                bool: True if the action is terminated, False otherwise.
+        Returns:
+            bool: True if the action is terminated, False otherwise.
         """
         return self._terminated
 
     def add_agent(self, agent_cfg) -> None:
         """
-            Add an agent to the environment.
+        Add an agent to the environment.
 
-            Args:
-                agent_cfg (dict): Configuration for the agent, including its attributes and parameters.
+        Args:
+            agent_cfg (dict): Configuration for the agent, including its attributes and parameters.
         """
 
         if "position" in agent_cfg:
@@ -116,10 +116,10 @@ class Iqa2DEnv(LangSuiteEnv):
 
     def random_world_position(self):
         """
-            Generate a random world position.
+        Generate a random world position.
 
-            Returns:
-                list: A list containing X and Y coordinates of a random position in the environment.
+        Returns:
+            list: A list containing X and Y coordinates of a random position in the environment.
         """
         if self.world:
             rand_room_id = random.choice(list(self.world.rooms.keys()))
@@ -140,10 +140,10 @@ class Iqa2DEnv(LangSuiteEnv):
 
     def create_world(self, world_cfg) -> None:
         """
-            Create the world based on a given configuration.
+        Create the world based on a given configuration.
 
-            Args:
-                world_cfg (dict): Configuration data for the world, including object relationships.
+        Args:
+            world_cfg (dict): Configuration data for the world, including object relationships.
         """
         parent2children = {}
 
@@ -198,10 +198,10 @@ class Iqa2DEnv(LangSuiteEnv):
 
     def update_config(self, config):
         """
-            Update the configuration of agents in the environment.
+        Update the configuration of agents in the environment.
 
-            Args:
-                config (dict): New configuration data for agents, where each agent's configuration is specified.
+        Args:
+            config (dict): New configuration data for agents, where each agent's configuration is specified.
         """
         for i, agent_id in enumerate(self.agents):
             self.agents[agent_id].set_config(config["agents"][i])
@@ -219,7 +219,7 @@ class Iqa2DEnv(LangSuiteEnv):
     def reset(self):
         """Resets the environment to an initial state, required before calling step. Returns the first agent observation for an episode and information, i.e. metrics, debug info."""
 
-    def render(self, mode = "", **kwargs):
+    def render(self, mode="", **kwargs):
         """Renders the environments to help visualise what the agent see, examples modes are “human”, “rgb_array”, “ansi” for text."""
         figure = self.render_plotly()
         if mode == "webui":
@@ -239,13 +239,13 @@ class Iqa2DEnv(LangSuiteEnv):
 
     def find_all_children(self, obj):
         """
-            Recursively find all children of a given object.
+        Recursively find all children of a given object.
 
-            Args:
-                obj: The object for which to find all children.
+        Args:
+            obj: The object for which to find all children.
 
-            Returns:
-                list: A list of all child objects, including their descendants.
+        Returns:
+            list: A list of all child objects, including their descendants.
         """
         children = []
         if len(obj.children) > 0:
@@ -256,13 +256,13 @@ class Iqa2DEnv(LangSuiteEnv):
 
     def get_object_by_id(self, target_id):
         """
-            Retrieve an object by its unique identifier.
+        Retrieve an object by its unique identifier.
 
-            Args:
-                target_id: The unique identifier of the object to be retrieved.
+        Args:
+            target_id: The unique identifier of the object to be retrieved.
 
-            Returns:
-                object or None: The object with the specified ID, or None if not found.
+        Returns:
+            object or None: The object with the specified ID, or None if not found.
         """
         for id, obj in self.world.objects.items():
             if id == target_id:
@@ -280,13 +280,13 @@ class Iqa2DEnv(LangSuiteEnv):
 
     def get_observed_objects(self, agent):
         """
-            Retrieve objects that the agent can observe based on its position.
+        Retrieve objects that the agent can observe based on its position.
 
-            Args:
-                agent: The agent whose observation capability is considered.
+        Args:
+            agent: The agent whose observation capability is considered.
 
-            Returns:
-                dict: A dictionary of observed objects with their unique IDs as keys.
+        Returns:
+            dict: A dictionary of observed objects with their unique IDs as keys.
         """
         objs = {}
         for id, obj in self.world.objects.items():
@@ -317,13 +317,13 @@ class Iqa2DEnv(LangSuiteEnv):
 
     def get_openned_object_observation(self, object_id):
         """
-            Generate an observation for objects contained within an opened object.
+        Generate an observation for objects contained within an opened object.
 
-            Args:
-                object_id: The unique identifier of the opened object.
+        Args:
+            object_id: The unique identifier of the opened object.
 
-            Returns:
-                str: An observation describing objects contained within the opened object.
+        Returns:
+            str: An observation describing objects contained within the opened object.
         """
         children = []
         observation = "In/on it you see "
@@ -339,14 +339,14 @@ class Iqa2DEnv(LangSuiteEnv):
 
     def get_observation(self, agent):
         """
-            Generate an observation based on the agent's field of view.
+        Generate an observation based on the agent's field of view.
 
-            Args:
-                agent: The agent for which to generate the observation.
+        Args:
+            agent: The agent for which to generate the observation.
 
-            Returns:
-                str: An observation describing (Calculate lines of sight (middle, left, and right) 
-                based on the agent's view vector.) objects within the agent's field of view.
+        Returns:
+            str: An observation describing (Calculate lines of sight (middle, left, and right)
+            based on the agent's view vector.) objects within the agent's field of view.
         """
         observed_objects = self.get_observed_objects(agent)
         middle_objs = []
@@ -447,10 +447,10 @@ class Iqa2DEnv(LangSuiteEnv):
 
     def render_plotly(self):
         """
-            Render the virtual environment using Plotly for visualization.
+        Render the virtual environment using Plotly for visualization.
 
-            Returns:
-                return the Plotly figure for visualization.
+        Returns:
+            return the Plotly figure for visualization.
         """
         fig = go.Figure()
 
@@ -474,10 +474,10 @@ class Iqa2DEnv(LangSuiteEnv):
 
     def render_matplotlib(self, save_to_path=None):
         """
-            Render the virtual environment using Matplotlib for visualization.
+        Render the virtual environment using Matplotlib for visualization.
 
-            Returns:
-                return the Matplotlib figure for visualization.
+        Returns:
+            return the Matplotlib figure for visualization.
         """
         fig = plt.figure(num=3, figsize=(5, 5))
         axes = fig.add_subplot(1, 1, 1)
@@ -503,13 +503,13 @@ class Iqa2DEnv(LangSuiteEnv):
 
     def is_valid_trajectory(self, traj):
         """
-            Check if a trajectory is valid and collision-free.
+        Check if a trajectory is valid and collision-free.
 
-            Args:
-                traj (Point2D or Line2D): The trajectory to be checked.
+        Args:
+            traj (Point2D or Line2D): The trajectory to be checked.
 
-            Returns:
-                bool: True if the trajectory is collision-free, False if it encounters obstacles.
+        Returns:
+            bool: True if the trajectory is collision-free, False if it encounters obstacles.
         """
         if isinstance(traj, Point2D):
             traj = Line2D([traj, Point2D(traj.x + 1, traj.y + 1)])
@@ -544,13 +544,13 @@ class Iqa2DEnv(LangSuiteEnv):
 
     def locate_agent_room(self, agent_id: str):
         """
-            Determine the room where an agent is located.
+        Determine the room where an agent is located.
 
-            Args:
-                agent_id (str): The unique identifier of the agent.
+        Args:
+            agent_id (str): The unique identifier of the agent.
 
-            Returns:
-                Room or None: The room where the agent is located, or None if not found.
+        Returns:
+            Room or None: The room where the agent is located, or None if not found.
         """
         for room_id, room in self.rooms.items():
             if room.geometry.contains(self.agents[agent_id].position):

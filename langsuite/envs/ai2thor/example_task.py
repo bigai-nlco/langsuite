@@ -27,9 +27,14 @@ def load_data(data_dir):
         procthor_data = out["load_dataset"]()
         os.chdir(WORKSPACE_PATH)
     except Exception:
-        import prior
+        try:
+            import prior
 
-        procthor_data = prior.load_dataset("procthor-10k")
+            procthor_data = prior.load_dataset("procthor-10k")
+        except ImportError:
+            raise ImportError(
+                "Please run `pip install prior` to load the Procthor dataset."
+            )
 
     # create mock task data
     task_data = []

@@ -18,10 +18,11 @@ from langsuite.world import WORLD_REGISTRY, Object2D, ObjectType, Room, Wall, Wo
 
 class IqaWall(Wall):
     """
-        An extended Wall class for IQA environments.
+    An extended Wall class for IQA environments.
 
-        This class represents a wall in an IQA environment.
+    This class represents a wall in an IQA environment.
     """
+
     def __init__(
         self,
         wall_id: str,
@@ -67,10 +68,11 @@ class IqaWall(Wall):
 
 class IqaRoom(Room):
     """
-        An extended Room class for IQA environments.
+    An extended Room class for IQA environments.
 
-        This class represents a room in an IQA environment.
+    This class represents a room in an IQA environment.
     """
+
     @classmethod
     def create(cls, id, polys_2d):
         polys_2d = Polygon2D(polys_2d)
@@ -102,10 +104,11 @@ class IqaRoom(Room):
 
 class IqaObject(Object2D):
     """
-        An extended Object class for IQA environments.
+    An extended Object class for IQA environments.
 
-        This class represents a room in an IQA environment.
+    This class represents a room in an IQA environment.
     """
+
     colorscales = list(CSS4_COLORS.keys())
     color_registry = defaultdict()
 
@@ -256,6 +259,7 @@ class IqaWorld(World):
         - Handling of room, wall, and object additions.
         - Checking for object existence.
     """
+
     @classmethod
     def create(cls, world_config):
         world_id = world_config.get("id", "IqaWorld")
