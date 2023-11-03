@@ -28,7 +28,7 @@ def load_data(data_dir):
     Returns:
         list: A list of task data dictionaries, each containing world and question-answer pairs.
     """
-    iqa_data = json.load(open(Path(data_dir, "data", "iqa", "iqa_list_qa.json")))
+    iqa_data = json.load(open(Path(data_dir, "data", "iqa", "iqa_test", "iqa_test_1k.json")))
     # iqa_data = json.load(open(Path(data_dir, "data", "iqa", "iqa_list_qa_counts_300.json")))
 
     task_data = []

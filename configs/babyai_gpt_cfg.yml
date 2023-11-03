@@ -1,0 +1,15 @@
+task: BabyAITask:BabyAIEnv
+template: ./langsuite/envs/babyai/templates/babyai_react.json
+
+env:
+  type: BabyAIEnv
+
+world:
+  type: BabyAIWorld
+  id: BabyAI-1RoomS8-v0
+  seed: 4
+
+agents:
+  - type: BabyAIAgentReact
+    llm:
+      llm_type: "ChatOpenAI"

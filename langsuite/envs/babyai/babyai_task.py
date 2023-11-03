@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import json
 from math import floor
-
+import os
+from pathlib import Path
 from langsuite.actions.base_action import ActionFeedback
 from langsuite.envs.babyai.babyai_env import BabyAIEnv
 from langsuite.envs.babyai.levels import level_dict
@@ -16,8 +18,7 @@ __all__ = [
     "BabyAITask",
 ]
 
-
-def load_data(seed_size, stage):
+def load_data_by_seed(seed_size, stage):
     data = []
     if stage == "test":
         for level in level_dict:
@@ -54,6 +55,20 @@ def load_data(seed_size, stage):
     return data
 
 
+def load_data(data_dir, stage):
+    data_path = Path(data_dir, stage + ".json")
+    if not os.path.exists(data_path):
+        logger.error(data_dir + " is not exist, please download data first")
+        raise FileNotFoundError
+    with open(
+        data_path,
+        "r",
+        encoding="utf-8",
+    ) as data_f:
+        data = json.load(data_f)
+    return data
+
+
 @TASK_REGISTRY.register(name="BabyAITask:BabyAIEnv")
 class BabyAITask(BaseTask):
     """
@@ -70,9 +85,13 @@ class BabyAITask(BaseTask):
     def create(cls, task_cfg, task_data=None):
         env = BabyAIEnv.create(task_cfg["env"])
         world_confg = deepcopy(task_cfg["world"])
-        if task_data:
-            world_confg.update(task_data)
-
+        if not task_data:
+            path = "./data/babyai/babyai_test"
+            tasks = load_data(path, "test")
+            task_data = tasks[0]
+        print(world_confg)
+        world_confg.update(task_data)
+        print(world_confg)
         env.create_world(world_confg)
         env.set_feedback_builder(TemplateBuilder(task_cfg["template"]))
         # propagate agent config to agents

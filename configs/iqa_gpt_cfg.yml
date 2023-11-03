@@ -1,5 +1,5 @@
 task: IqaTask:Iqa2DEnv
-template: ./langsuite/envs/iqa/templates/iqa.json
+template: ./langsuite/envs/iqa/templates/iqa_cot.json
 
 env:
   type: Iqa2DEnv
@@ -12,7 +12,7 @@ world:
 
 
 agents:
-  - type: IqaExpertAgent
+  - type: IqaAgent
     position: 'random'
     inventory_capacity: 1
     focal_length: 10
@@ -20,5 +20,6 @@ agents:
     max_view_distance: 2
     step_size: 0.25
     view_degree: 60
-
+    llm:
+      llm_type: "ChatOpenAI"
 question_type: 0

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from minigrid.core.world_object import Key
-
 from langsuite.actions.base_action import (
     ACTION_REGISTERY,
     BabyAIActionFeedback,
@@ -295,7 +294,7 @@ class BabyAIDropAction(BaseAction):
                 )
             else:
                 if not fwd_cell:
-                    _, _, done, _ = self.env.world.step(self.env.world.actions.drop)
+                    _, _, done, _, _ = self.env.world.step(self.env.world.actions.drop)
                     # self.env.world.grid.set(*fwd_pos, self.env.world.carrying)
                     # self.env.world.carrying.cur_pos = fwd_pos
                     # self.env.world.carrying = None

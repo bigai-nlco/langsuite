@@ -265,8 +265,8 @@ class IqaWorld(World):
         world_id = world_config.get("id", "IqaWorld")
         world = cls(world_id)
         world.grid_size = world_config["grid_size"]
-        asset_path = world_config["asset_path"]
-        assets = ai2thor_utils.load_assets(asset_path)
+        # asset_path = world_config["asset_path"]
+        # assets = ai2thor_utils.load_assets(asset_path)
         world_data = world_config["data"]
 
         def get_room_polygons(objects, scene_corner_points):

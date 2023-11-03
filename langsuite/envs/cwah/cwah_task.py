@@ -18,8 +18,8 @@ from langsuite.utils.template_builder import TemplateBuilder
 CwahPath = WORKSPACE_PATH
 
 
-def load_data(data_dir, stage="train", subset=False):
-    cwah_path = Path(data_dir, "test_env_set_help.pik")
+def load_data(data_dir, subset=False):
+    cwah_path = Path(data_dir, "cwah_test", "test_env_set_help.pik")
     # print(cwah_path)
     import pickle
 
@@ -71,7 +71,7 @@ class CwahTask(BaseTask):
     def create(cls, task_cfg, task_data=None):
         if not task_data:
             # task_data = random.choice(load_data(CwahPath))
-            task_data = load_data(task_cfg["dataroot"], "train")[3]
+            task_data = load_data(task_cfg["dataroot"])[3]
         world_config = deepcopy(task_cfg["world"])
         if "world_data" in task_data.get("data"):
             world_config.update({"data": task_data["data"]["world_data"]})

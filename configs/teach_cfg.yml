@@ -24,7 +24,7 @@ agents:
     max_view_distance: 10
     step_size: 0.25
     llm:
-      llm_type: "AzureChatOpenAI"
+      llm_type: "ChatOpenAI"
   - type: TeachAgent
     agent_id: 1
     agent_name: 'follower'
@@ -35,4 +35,4 @@ agents:
     max_view_distance: 2
     step_size: 0.25
     llm:
-      llm_type: "AzureChatOpenAI"
+      llm_type: "ChatOpenAI"

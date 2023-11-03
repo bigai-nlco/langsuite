@@ -99,8 +99,8 @@ class AlfredTask(BaseTask):
     @classmethod
     def create(cls, task_cfg, task_data=None):
         if not task_data:
-            path = "./data/alfred"
-            tasks = load_data(path, "dev")
+            path = "./data/alfred/alfred_test"
+            tasks = load_data(path, "test")
             task_data = tasks[0]
 
         env = Alfred2DEnv.create(task_cfg["env"])
@@ -152,7 +152,7 @@ class AlfredTask(BaseTask):
         )
 
     def start(self, render=True):
-        self.env.reset()
+        # self.env.reset()
         if render:
             prompt = self.task_guidance()
             logger.emit({"role": "system", "content": prompt})
