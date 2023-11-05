@@ -228,7 +228,7 @@ agents:
 If you find our work useful, please cite
 ```bibtex
 @misc{langsuite2023,
-  author    = {Zilong Zheng, Mengmeng Wang, Zixia Jia, Baichen Tong, Song-Chun Zhu},
+  author    = {Zilong Zheng, Mengmeng Wang, Zixia Jia, Baichen Tong},
   title     = {LangSuit⋅E: Controlling, Planning, and Interacting with Large Language Models in Embodied Text Environments},
   year      = {2023},
   publisher = {GitHub},
