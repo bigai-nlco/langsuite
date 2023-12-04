@@ -287,13 +287,15 @@ class AlfredTask(BaseTask):
         s = 0
 
         targets = self.target_status
+        # print(targets)
         receptacles = self.get_objects_with_name_and_prop(
             targets["parent_target"], "receptacle"
         )
         pickupables = self.get_objects_with_name_and_prop(
             targets["object_target"], "pickupable"
         )
-
+        # print(receptacles)
+        # print(pickupables)
         # check if object needs to be sliced
         if targets["object_sliced"]:
             ts += 1
@@ -301,13 +303,20 @@ class AlfredTask(BaseTask):
                 s += 1
 
         try:
-            if np.any(
-                [
-                    np.any([p.id for r in receptacles if r.get_child(p.id) is not None])
-                    for p in pickupables
-                ]
-            ):
+            found = 0
+            for p in pickupables:
+                for r in receptacles:
+                    if r.get_child(p.id) is not None:
+                        found += 1
+            if found > 0:
                 s += 1
+            # if np.any(
+            #     [
+            #         np.any([p.id for r in receptacles if r.get_child(p.id) is not None])
+            #         for p in pickupables
+            #     ]
+            # ):
+            #     s += 1
         except:
             # TODO
             pass
@@ -315,7 +324,7 @@ class AlfredTask(BaseTask):
         return s, ts
 
     def pick_two_obj_and_place_conditions_met(self):
-        ts = 1
+        ts = 2
         s = 0
 
         targets = self.target_status
@@ -536,7 +545,7 @@ class AlfredTask(BaseTask):
         }
         # print(self.task_type)
         s, ts = conditions_met_funcs.get(self.task_type, func_not_found)()
-        self.conditioned_success = round(s / ts, 2)
+        self.conditioned_success = round(s / ts, 4)
         return s == ts
 
 

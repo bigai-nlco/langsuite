@@ -482,7 +482,7 @@ class Level_UnlockPickup(RoomGridLevel):
             num_cols=2,
             room_size=room_size,
             max_steps=8 * room_size**2,
-            seed=seed,
+            #seed=seed,
         )
 
     def gen_mission(self):
@@ -554,7 +554,7 @@ class Level_UnlockToUnlock(RoomGridLevel):
             num_cols=3,
             room_size=room_size,
             max_steps=30 * room_size**2,
-            seed=seed,
+            #seed=seed,
         )
 
     def gen_mission(self):
@@ -757,7 +757,7 @@ class KeyCorridor(RoomGridLevel):
             room_size=room_size,
             num_rows=num_rows,
             max_steps=30 * room_size**2,
-            seed=seed,
+            #seed=seed,
         )
 
     def gen_mission(self):
@@ -876,7 +876,7 @@ class PutNext(RoomGridLevel):
             num_cols=2,
             room_size=room_size,
             max_steps=8 * room_size**2,
-            seed=seed,
+            #seed=seed,
         )
 
     def gen_mission(self):
@@ -971,7 +971,7 @@ class MoveTwoAcross(RoomGridLevel):
             num_cols=2,
             room_size=room_size,
             max_steps=16 * room_size**2,
-            seed=seed,
+            #seed=seed,
         )
 
     def gen_mission(self):
