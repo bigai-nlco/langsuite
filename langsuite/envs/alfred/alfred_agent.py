@@ -1,10 +1,13 @@
 # Copyright (c) BIGAI Research. All rights reserved.
 # Licensed under the MIT license.
 from __future__ import annotations
+import json
 
 import re
 from copy import deepcopy
 from typing import Dict
+
+import requests
 
 from langsuite.actions import ActionFeedback, get_action
 from langsuite.agents.base_agent import AGENT_REGISTRY
@@ -15,7 +18,6 @@ from langsuite.shapes import Vector2D
 from langsuite.utils import math_utils
 from langsuite.utils.logging import logger
 from langsuite.utils.string_utils import camelcase
-
 
 @AGENT_REGISTRY.register()
 class AlfredAgent(SimpleAgent):
@@ -39,18 +41,25 @@ class AlfredAgent(SimpleAgent):
             action_dict = dict(prompt=action_dict)
 
         prompt = action_dict.get("prompt")
-        if self.previous_action is None or self.previous_action["success"]:
-            self.error_cache.clear()
-            self.chat_history.append(
-                {"role": "system", "content": action_dict["prompt"], "success": True}
-            )
-        else:
-            self.error_cache.append(
-                {"role": "system", "content": action_dict["prompt"], "success": False}
-            )
+        action = action_dict.get("action")
+
+        if prompt:
+        
+            if self.previous_action is None or self.previous_action["success"]:
+                self.error_cache.clear()
+                self.chat_history.append(
+                    {"role": "system", "content": action_dict["prompt"], "success": True}
+                )
+            else:
+                self.error_cache.append(
+                    {"role": "system", "content": action_dict["prompt"], "success": False}
+                )
 
         parsed_response = {}
-        response = self.fetch_prompt_response(prompt)
+        if not action and prompt and len(prompt) > 0:
+            response = self.fetch_prompt_response(prompt)
+        else:
+            response = action
         parsed_response = self.parse_response(response)
         logger.info(parsed_response)
         success = parsed_response.get("success", True)
@@ -270,9 +279,9 @@ class AlfredAgent(SimpleAgent):
         self.history_all[f"{len(self.history_all)}"] = prompts[1:]
 
         self.chat_history.append({"role": "system", "content": str(prompt)})
-        response = self.llm(messages=create_llm_prompts(messages=prompts))
+        # response = self.llm(messages=create_llm_prompts(messages=prompts))
         # print(prompts)
-        # response = llm_gpt_35(prompts)
+        response = llm_gpt_35(prompts)
         logger.info(response)
         return process_llm_results(response)
 

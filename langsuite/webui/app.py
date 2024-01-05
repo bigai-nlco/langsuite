@@ -164,7 +164,7 @@ class StreamlitApp:
                     st_logger.info(response["feedback"])
                     st.session_state.chat_messages.append(
                         {
-                            "role": "user",
+                            "role": "system",
                             "content": response["feedback"]["state"]["feedback"],
                         }
                     )
@@ -232,23 +232,25 @@ class StreamlitApp:
                 if prompt := st.chat_input("Prompt"):
                     # with st.chat_message("user"):
                     #     st.markdown(prompt)
-                    new_message = {"role": "system", "content": prompt}
+                    new_message = {"role": "user", "content": prompt}
                     st.session_state.chat_messages.append(new_message)
                     scene_response = await send_chat_message(session, new_message)
+                    print("scene_response*********")
+                    print(scene_response)
                     if scene_response:
-                        system_response = scene_response["state"]
+                        system_response = scene_response["feedback"][3]["n"]
                         if type(system_response) == dict:
                             system_response = [system_response]
 
                         message = []
                         st_logger.info(system_response)
                         for response in system_response:
-                            message.append((response["agent"], response["feedback"]))
+                            message.append((response["agent"], response["response"]))
 
                         message = ", ".join([f"{m[0]}: {m[1]}" for m in message])
 
                         st.session_state.chat_messages.append(
-                            {"role": "user", "content": message}
+                            {"role": "system", "content": message}
                         )
 
             with c2:
@@ -312,8 +314,8 @@ class StreamlitApp:
                             st_logger.info(scene_response["feedback"])
                             st.session_state.chat_messages.append(
                                 {
-                                    "role": "user",
-                                    "content": scene_response["feedback"]["state"][
+                                    "role": "system",
+                                    "content": scene_response["feedback"][3][
                                         "feedback"
                                     ],
                                 }

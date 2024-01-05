@@ -65,7 +65,7 @@ class LangSuiteEnv(gym.Env):
         you are responsible for calling `reset()` to reset this environment's state. Accepts
         an action and returns a tuple (observation, reward, done, info).
         """
-        if type(action_dict) == str:
+        if type(action_dict) == str or "action" in action_dict:
             # broadcast action to all agents
             return self.step({agent: action_dict for agent in self.agent_ids})
 

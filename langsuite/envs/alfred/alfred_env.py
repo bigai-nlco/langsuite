@@ -169,8 +169,8 @@ class Alfred2DEnv(LangSuiteEnv):
     def get_task_info(self):
         return {
             "state": ActionFeedback(
-                success=True, feedback=self.feedback_builder.build("intro")
-            ).to_json()
+                success=True, feedback=self.feedback_builder.build("intro", example=self.feedback_builder.build("example")) 
+            )
         }
 
     def step_single_agent(self, agent_id: str, action):

@@ -79,7 +79,7 @@ def serve(env, *args):
 
         action = req_info.get("action")
         # if action == "fetch_scene":
-        if state := env.step(action=action):
+        if state := env.step({"action": action}):
             figure = env.render(mode="webui")
             logger.info(state)
 
@@ -108,7 +108,8 @@ def serve(env, *args):
         message = req_info.get("message")
         logger.info(message)
         # if action == "fetch_scene":
-        if state := env.step(message=message):
+        
+        if state := env.step({"action": message["content"]}):
             figure = env.render(mode="webui")
             logger.info(state)
 
