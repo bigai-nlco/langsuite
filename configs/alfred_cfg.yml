@@ -1,0 +1,19 @@
+task: AlfredTask:Alfred2DEnv
+template: /home/wangmengmeng/workplace/gitlab/sim2text/langsuite/envs/alfred/templates/alfred_self_localization.json
+
+env:
+  type: Alfred2DEnv
+
+world:
+  type: AlfredWorld
+  id: alfred_world
+  grid_size: 0.25
+
+agents:
+  - type: AlfredAgentReact
+    position: 'random'
+    inventory_capacity: 5
+    focal_length: 10
+    max_manipulate_distance: 2
+    max_view_distance: 2
+    step_size: 0.25

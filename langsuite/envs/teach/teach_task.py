@@ -6,7 +6,6 @@ import json
 from copy import deepcopy
 from math import floor
 from pathlib import Path
-
 from tqdm import tqdm
 
 from langsuite.actions import get_action
@@ -22,22 +21,23 @@ from langsuite.utils.template_builder import TemplateBuilder
 
 def load_data(data_dir, stage, subset=10):
     """
-    Load TEACh (TEACh: Task-driven Embodied Agents that Chat) data from a specified directory.
+        Load TEACh (TEACh: Task-driven Embodied Agents that Chat) data from a specified directory.
 
-    Args:
-        data_dir (str): The directory containing TEACh data files.
-        stage (str): Classification of data.
+        Args:
+            data_dir (str): The directory containing TEACh data files.
+            stage (str): Classification of data.
 
-    Returns:
-        list: One of task data dictionaries.
+        Returns:
+            list: One of task data dictionaries.
     """
     teach_train_data = []
     teach_paths = Path(
-        data_dir, "data", "teach", "teach_test", stage
+        data_dir, "data", "teach", "teach_games", "teach_games", stage
     ).glob("*.json")
     _id = 0
     for teach_path in tqdm(teach_paths):
         _id += 1
+
         if subset and _id > subset:
             break
         with open(teach_path) as f:
@@ -52,6 +52,7 @@ def load_data(data_dir, stage, subset=10):
                 path=teach_path,
             )
         )
+
     return teach_train_data[0]
 
 
@@ -89,7 +90,7 @@ class TeachTask(BaseTask):
     def create(cls, task_cfg, task_data=None):
         if not task_data:
             # task_data = random.choice(load_data(TeachPath))
-            task_data = load_data(WORKSPACE_PATH, "test")
+            task_data = load_data(WORKSPACE_PATH, "valid_unseen")
         print(task_data["path"])
         env = Teach2DEnv.create(task_cfg["env"])
         world_config = deepcopy(task_cfg["world"])
@@ -97,8 +98,7 @@ class TeachTask(BaseTask):
             world_config.update({"data": task_data["data"]["world_data"]})
         env.create_world(world_config)
         if task_cfg.get("isExpert", False):
-            task_cfg["template"] = task_cfg["template"].replace(
-                "react", "expert")
+            task_cfg["template"] = task_cfg["template"].replace("react", "expert")
         env.set_feedback_builder(TemplateBuilder(task_cfg["template"]))
 
         # for agent in task_cfg["agents"]:
@@ -158,23 +158,23 @@ class TeachTask(BaseTask):
 
     def step(self, action_dict):
         """
-        Perform a step in the environment based on given actions.
+            Perform a step in the environment based on given actions.
 
-        Args:
-            action_dict (dict or str): Actions to be taken by agents in the environment.
+            Args:
+                action_dict (dict or str): Actions to be taken by agents in the environment.
 
-        Returns:
-            tuple: Observation, reward, done flag, and additional information.
+            Returns:
+                tuple: Observation, reward, done flag, and additional information.
         """
         if type(action_dict) == dict:
             if len(action_dict) == 0:
-                info = {"n": [{
+                info = {
                     "state": ActionFeedback(
                         success=False,
                         feedback="No action passed in.",
                     ),
                     "is_terminated": True,
-                }]}
+                }
                 return None, 0, False, info
 
         if type(action_dict) == str or (
@@ -203,13 +203,13 @@ class TeachTask(BaseTask):
 
     def _determine_stop(self, cur_info):
         """
-        Determine if the agent should stop based on stop criteria.
+            Determine if the agent should stop based on stop criteria.
 
-        Args:
-            cur_info: Current information or state for stop criterion evaluation.
+            Args:
+                cur_info: Current information or state for stop criterion evaluation.
 
-        Returns:
-            bool: True if any stop criterion is met, False otherwise.
+            Returns:
+                bool: True if any stop criterion is met, False otherwise.
         """
         for cur_agent_info in cur_info["n"]:
             if cur_agent_info is None:
@@ -284,7 +284,6 @@ class TeachTask(BaseTask):
                                 child.props["simbotIsFilledWithCoffee"] = True
 
             action_dict = {}
-            print(info)
             for aid, agnt_info in enumerate(info["n"]):
                 # agent_name = self.env.agent_names[aid]
                 if agnt_info is None:
@@ -297,8 +296,7 @@ class TeachTask(BaseTask):
                         )
                     elif type(agnt_info["response"]) == list:
                         for resp_action, resp in agnt_info["response"]:
-                            logger.robot_emit(
-                                resp, name=agent_name, action=resp_action)
+                            logger.robot_emit(resp, name=agent_name, action=resp_action)
                     else:
                         raise ValueError(
                             f"Unable to render assistant response: {agnt_info['response']}"
@@ -307,8 +305,7 @@ class TeachTask(BaseTask):
                 if "feedback" in agnt_info:
                     if render:
                         logger.emit(
-                            {"role": "system",
-                                "content": agnt_info["feedback"]}
+                            {"role": "system", "content": agnt_info["feedback"]}
                         )
                         # pass
                     action_dict[aid] = {"prompt": agnt_info["feedback"]}

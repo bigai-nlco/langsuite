@@ -4,11 +4,15 @@ from __future__ import annotations
 
 import re
 from copy import deepcopy
+import requests
+import json
+import openai
 
 from langsuite.actions import ActionFeedback, get_action
 from langsuite.agents.base_agent import AGENT_REGISTRY
 from langsuite.agents.simple_agent import SimpleAgent
 from langsuite.llms import create_llm, create_llm_prompts, process_llm_results
+from langsuite.utils import logging
 from langsuite.utils.logging import logger
 
 
@@ -20,7 +24,6 @@ def parse_answer(response):
         return match
     return ""
 
-
 def parse_method(response, method):
     method = method.lower()
     pattern = r"" + method + "\s*\[([^]]+)\]"
@@ -29,6 +32,39 @@ def parse_method(response, method):
     for match in matches:
         return match
     return ""
+
+def llm_gpt_35(messages, max_gen=100):
+    # 替换为自己的KEY
+    messages = [{"role": message["role"], "content": message["content"]} for message in messages]
+    # print("messages is !!! ", messages)
+    api_key = ""
+    try:
+        api_url = 'https://one.aiskt.com/v1/chat/completions'
+        # 设置请求头部，包括 API 密钥
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+        # 准备请求的数据
+        payload = {
+            'model': "gpt-3.5-turbo-16k",
+            'messages': messages,
+            # 'temperature': 1.0
+        }
+        # 发送 POST 请求
+        response = requests.post(api_url, headers=headers, data=json.dumps(payload))
+        # 检查响应状态
+        if response.status_code == 200:
+            # 解析响应并提取需要的信息
+            data = response.json()
+#            print("----***")
+#            print(data)
+            return data['choices'][0]['message']['content']
+        else:
+            return f'Error: Received status code {response.status_code}'
+    except Exception as e:
+        return 'An error occurred while sending the request'
+
 
 
 @AGENT_REGISTRY.register()
@@ -43,6 +79,13 @@ class IqaAgent(SimpleAgent):
         self.max_manipulate_distance = None
         self.view_degree = None
         self.llm = create_llm(agent_config["llm"])
+        if 'mem_file' in agent_config:
+            self.mem = dict()
+            with open(agent_config['mem_file'], 'r') as log_file:
+                for line in log_file.readlines():
+                    data: dict = json.loads(line.strip())
+                    for k, v in data.items():
+                        self.mem[k] = v
 
     def step(self, action_dict):
         if type(action_dict) == str:
@@ -74,6 +117,21 @@ class IqaAgent(SimpleAgent):
                 parsed_response["feedback"] = action_status.feedback
                 success = action_status.success
             elif (
+                "action" in parsed_response
+                and parsed_response["action"].lower() == "goto"
+            ):
+                object_id = parse_method(parsed_response["response"], "GoTo")
+                object_name = ""
+                try:
+                    object_name = self.env.object_name2id[object_id]
+                except:
+                    return False, {}
+                action_status = self._mock_execute(
+                    action=parsed_response["action"], object_id=object_name
+                )
+                parsed_response["feedback"] = action_status.feedback
+                success = action_status.success
+            elif (
                 "action" in parsed_response and parsed_response["action"] != "UserInput"
             ):
                 action_status = self._mock_execute(action=parsed_response["action"])
@@ -93,14 +151,34 @@ class IqaAgent(SimpleAgent):
                 )
             else:
                 self.status["started"] = True
-                return dict(
-                    response=response,
-                    feedback=self.env.feedback_builder.build(
-                        "IqaStart",
-                        task=self.env.get_task_def(),
-                        object_str=self.env.get_observation(self),
-                    ),
-                )
+                if hasattr(self, 'mem'):
+                    history = self.mem.get(self.env.task_log_file_name)
+                    logging.logger._logger.info(f'{self.env.task_log_file_name}: {history}')
+                    # if history is not None:
+                    #     desc = self.env.get_task_def() + 'Your memory for the task is below:\n' + history
+                    # else:
+                    #     desc = self.env.get_task_def()
+                    if history is None or self.env.get_task_def() is None:
+                        info = f"Do not need refleaction for {self.env.task_log_file_name}"
+                        raise Exception(info)
+                    desc = self.env.get_task_def() + '\nYour memory for the task is below:\n' + history
+                    return dict(
+                        response=response,
+                        feedback=self.env.feedback_builder.build(
+                            "IqaStart",
+                            task=desc,
+                            observation=self.env.get_observation(self),
+                        ),
+                    )
+                else:
+                    return dict(
+                        response=response,
+                        feedback=self.env.feedback_builder.build(
+                            "IqaStart",
+                            task=self.env.get_task_def(),
+                            object_str=self.env.get_observation(self, on_start=True),
+                        ),
+                    )
         elif "answer" in response.lower():
             response_answer = parse_answer(response)
             gold_answer = self.env.get_answer()
@@ -113,7 +191,18 @@ class IqaAgent(SimpleAgent):
             )
 
         else:
-            if "move_ahead" in response:
+            if "goto" in response:
+                action = "GoTo"
+                object_name = parse_method(response, "GoTo")
+                if not object_name or object_name == "object_name":
+                    return dict(response=response, action="pass")
+                # response = "goto[{}]".format(object_name)
+                return dict(
+                    response=response,
+                    action=action,
+                    action_arg={"object_name": object_name},
+                )
+            elif "move_ahead" in response:
                 action = "MoveAhead"
                 response = "move_ahead"
             elif "turn_left" in response:
@@ -127,7 +216,7 @@ class IqaAgent(SimpleAgent):
                 object_name = parse_method(response, "Open")
                 if not object_name or object_name == "object_name":
                     return dict(response=response, action="pass")
-                response = "open[{}]".format(object_name)
+                # response = "open[{}]".format(object_name)
                 return dict(
                     response=response,
                     action=action,
@@ -143,7 +232,12 @@ class IqaAgent(SimpleAgent):
         prompts = deepcopy(self.chat_history)
         prompts.append({"role": "system", "content": str(prompt)})
         self.chat_history.append({"role": "system", "content": str(prompt)})
-        response = self.llm(messages=create_llm_prompts(messages=prompts))
+        # response = self.llm(messages=create_llm_prompts(messages=prompts))
+        response = llm_gpt_35(prompts)
+        self.chat_history.append(
+                {"role": "assistant", "content": response, "success": True}
+            )
+
         logger.info(response)
 
         return process_llm_results(response)

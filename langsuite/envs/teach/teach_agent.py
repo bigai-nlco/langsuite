@@ -209,7 +209,7 @@ class TeachAgent(SimpleAgent):
         self.env.expert_steps += 1
         action = expert_action["action"]
         action_kwargs = {}
-
+        
         if "Forward" == action:
             action = "MoveAhead"
         elif "Backward" == action:
@@ -251,9 +251,7 @@ class TeachAgent(SimpleAgent):
             action_kwargs["object_id"] = expert_action["action_arg"]["oid"]
 
         response = []
-        convert_action_name = lambda action_name: "_".join(
-            re.findall("[A-Z][^A-Z]*", action_name)
-        ).lower()
+        convert_action_name = lambda action_name: "_".join(re.findall("[A-Z][^A-Z]*", action_name)).lower()
         if action == "Chat":
             response.append(
                 (

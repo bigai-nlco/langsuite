@@ -39,7 +39,6 @@ class Teach2DEnv(LangSuiteEnv):
     Args:
         config (dict): Environment config
     """
-
     def __init__(self, env_config):
         super().__init__(env_config=env_config)
         self.agents = defaultdict()
@@ -95,10 +94,10 @@ class Teach2DEnv(LangSuiteEnv):
     @property
     def is_multi_agent(self):
         """
-        Determines if there are multiple agents.
+            Determines if there are multiple agents.
 
-        Returns:
-            bool: True if the number of agents is greater than 1, False otherwise.
+            Returns:
+                bool: True if the number of agents is greater than 1, False otherwise.
         """
         return len(self.agents) > 1
 
@@ -107,10 +106,10 @@ class Teach2DEnv(LangSuiteEnv):
 
     def random_world_position(self):
         """
-        Generate a random world position.
+            Generate a random world position.
 
-        Returns:
-            list: A list containing X and Y coordinates of a random position in the environment.
+            Returns:
+                list: A list containing X and Y coordinates of a random position in the environment.
         """
         if self.world:
             rand_room_id = random.choice(list(self.world.rooms.keys()))
@@ -131,10 +130,10 @@ class Teach2DEnv(LangSuiteEnv):
 
     def create_world(self, world_cfg) -> None:
         """
-        Create the world based on a given configuration.
+            Create the world based on a given configuration.
 
-        Args:
-            world_cfg (dict): Configuration data for the world, including object relationships.
+            Args:
+                world_cfg (dict): Configuration data for the world, including object relationships.
         """
         parent2children = {}
         init_state = world_cfg["data"]["tasks"][0]["episodes"][0]["initial_state"]
@@ -185,13 +184,13 @@ class Teach2DEnv(LangSuiteEnv):
 
     def find_all_children(self, obj):
         """
-        Recursively find all children of a given object.
+            Recursively find all children of a given object.
 
-        Args:
-            obj: The object for which to find all children.
+            Args:
+                obj: The object for which to find all children.
 
-        Returns:
-            list: A list of all child objects, including their descendants.
+            Returns:
+                list: A list of all child objects, including their descendants.
         """
         children = []
         if len(obj.children) > 0:
@@ -202,10 +201,10 @@ class Teach2DEnv(LangSuiteEnv):
 
     def add_agent(self, agent_cfg) -> None:
         """
-        Add an agent to the environment.
+            Add an agent to the environment.
 
-        Args:
-            agent_cfg (dict): Configuration for the agent, including its attributes and parameters.
+            Args:
+                agent_cfg (dict): Configuration for the agent, including its attributes and parameters.
         """
 
         if "position" in agent_cfg:
@@ -234,10 +233,10 @@ class Teach2DEnv(LangSuiteEnv):
 
     def update_config(self, config):
         """
-        Update the configuration of agents in the environment.
+            Update the configuration of agents in the environment.
 
-        Args:
-            config (dict): New configuration data for agents, where each agent's configuration is specified.
+            Args:
+                config (dict): New configuration data for agents, where each agent's configuration is specified.
         """
         for i, agent_id in enumerate(self.agents):
             self.agents[agent_id].set_config(config["agents"][i])
@@ -270,7 +269,9 @@ class Teach2DEnv(LangSuiteEnv):
         action_id = interaction["action_id"]
         action_dict["action"] = self.action_id2name[action_id]
         action_dict["action_arg"] = interaction
-        obs, _, _, info = self.step_single_agent(agent_id=agent_id, action=action_dict)
+        obs, _, _, info = self.step_single_agent(
+            agent_id=agent_id, action=action_dict
+        )
         list_obs["n"][agent_id] = obs
         list_info["n"][agent_id] = info
         if self.expert_steps >= len(self.interactions):
@@ -299,10 +300,10 @@ class Teach2DEnv(LangSuiteEnv):
 
     def render_plotly(self):
         """
-        Render the virtual environment using Plotly for visualization.
+            Render the virtual environment using Plotly for visualization.
 
-        Returns:
-            return the Plotly figure for visualization.
+            Returns:
+                return the Plotly figure for visualization.
         """
         fig = go.Figure()
 
@@ -326,10 +327,10 @@ class Teach2DEnv(LangSuiteEnv):
 
     def render_matplotlib(self, save_to_path=None):
         """
-        Render the virtual environment using Matplotlib for visualization.
+            Render the virtual environment using Matplotlib for visualization.
 
-        Returns:
-            return the Matplotlib figure for visualization.
+            Returns:
+                return the Matplotlib figure for visualization.
         """
         fig = plt.figure(num=3, figsize=(5, 5))
         axes = fig.add_subplot(1, 1, 1)
@@ -354,13 +355,13 @@ class Teach2DEnv(LangSuiteEnv):
 
     def is_valid_trajectory(self, traj):
         """
-        Check if a trajectory is valid and collision-free.
+            Check if a trajectory is valid and collision-free.
 
-        Args:
-            traj (Point2D or Line2D): The trajectory to be checked.
+            Args:
+                traj (Point2D or Line2D): The trajectory to be checked.
 
-        Returns:
-            bool: True if the trajectory is collision-free, False if it encounters obstacles.
+            Returns:
+                bool: True if the trajectory is collision-free, False if it encounters obstacles.
         """
         if isinstance(traj, Point2D):
             traj = Line2D([traj, Point2D(traj.x + 1, traj.y + 1)])
@@ -395,13 +396,13 @@ class Teach2DEnv(LangSuiteEnv):
 
     def locate_agent_room(self, agent_id: str):
         """
-        Determine the room where an agent is located.
+            Determine the room where an agent is located.
 
-        Args:
-            agent_id (str): The unique identifier of the agent.
+            Args:
+                agent_id (str): The unique identifier of the agent.
 
-        Returns:
-            Room or None: The room where the agent is located, or None if not found.
+            Returns:
+                Room or None: The room where the agent is located, or None if not found.
         """
         for room_id, room in self.rooms.items():
             if room.geometry.contains(self.agents[agent_id].position):
@@ -410,13 +411,13 @@ class Teach2DEnv(LangSuiteEnv):
 
     def get_agent_position(self, agent_id: str):
         """
-        Get the position and rotation of the specified agent.
+            Get the position and rotation of the specified agent.
 
-        Args:
-            agent_id (str): The unique identifier of the agent.
+            Args:
+                agent_id (str): The unique identifier of the agent.
 
-        Returns:
-            dict: A dictionary containing agent position (x, z) and rotation.
+            Returns:
+                dict: A dictionary containing agent position (x, z) and rotation.
         """
         x = self.agents[agent_id].position.x
         z = self.agents[agent_id].position.y
@@ -438,13 +439,13 @@ class Teach2DEnv(LangSuiteEnv):
 
     def get_observed_objects(self, agent):
         """
-        Retrieve objects that the agent can observe based on its position.
+            Retrieve objects that the agent can observe based on its position.
 
-        Args:
-            agent: The agent whose observation capability is considered.
+            Args:
+                agent: The agent whose observation capability is considered.
 
-        Returns:
-            dict: A dictionary of observed objects with their unique IDs as keys.
+            Returns:
+                dict: A dictionary of observed objects with their unique IDs as keys.
         """
         objs = {}
         for id, obj in self.world.objects.items():
@@ -462,13 +463,13 @@ class Teach2DEnv(LangSuiteEnv):
 
     def get_observation_in_object(self, obj):
         """
-        Generate an observation for objects contained in or on the object.
+            Generate an observation for objects contained in or on the object.
 
-        Args:
-            object_id: The unique identifier of the object.
+            Args:
+                object_id: The unique identifier of the object.
 
-        Returns:
-            str: An observation describing objects contained in or on the object.
+            Returns:
+                str: An observation describing objects contained in or on the object.
         """
         observation = ""
         if (
@@ -504,13 +505,13 @@ class Teach2DEnv(LangSuiteEnv):
 
     def get_openned_object_observation(self, object_id):
         """
-        Generate an observation for objects contained within an opened object.
+            Generate an observation for objects contained within an opened object.
 
-        Args:
-            object_id: The unique identifier of the opened object.
+            Args:
+                object_id: The unique identifier of the opened object.
 
-        Returns:
-            str: An observation describing objects contained within the opened object.
+            Returns:
+                str: An observation describing objects contained within the opened object.
         """
         children = []
         observation = "In it you see "
@@ -526,7 +527,7 @@ class Teach2DEnv(LangSuiteEnv):
 
     def get_held_object_observation(self, agent):
         """
-        Describing the things in hand
+            Describing the things in hand
         """
         inventory = []
         observation = "You are now holding "
@@ -543,14 +544,14 @@ class Teach2DEnv(LangSuiteEnv):
 
     def get_observation(self, agent):
         """
-        Generate an observation based on the agent's field of view.
+            Generate an observation based on the agent's field of view.
 
-        Args:
-            agent: The agent for which to generate the observation.
+            Args:
+                agent: The agent for which to generate the observation.
 
-        Returns:
-            str: An observation describing (Calculate lines of sight (middle, left, and right)
-            based on the agent's view vector.) objects within the agent's field of view.
+            Returns:
+                str: An observation describing (Calculate lines of sight (middle, left, and right) 
+                based on the agent's view vector.) objects within the agent's field of view.
         """
         middle_objs = []
         left_objs = []

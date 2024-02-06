@@ -1,13 +1,16 @@
 # Copyright (c) BIGAI Research. All rights reserved.
 # Licensed under the MIT license.
-from __future__ import annotations
-import json
 
+# -*- coding: utf-8 -*-
+import json
 import re
+import time
 from copy import deepcopy
 from typing import Dict
 
 import requests
+
+import openai
 
 from langsuite.actions import ActionFeedback, get_action
 from langsuite.agents.base_agent import AGENT_REGISTRY
@@ -18,6 +21,87 @@ from langsuite.shapes import Vector2D
 from langsuite.utils import math_utils
 from langsuite.utils.logging import logger
 from langsuite.utils.string_utils import camelcase
+import datetime
+# def llm_gpt_35(messages, max_gen=100):
+#     for m in messages:
+#         if "success" in m:
+#             del m["success"]
+#     rsp = openai.ChatCompletion.create(
+#         model="gpt-3.5-turbo-16k",
+#         messages=messages,
+#         temperature=0.0,
+#         top_p=1,
+#         max_tokens=max_gen,
+#         frequency_penalty=0,
+#         presence_penalty=0,
+#     )
+#     response = (
+#         rsp["choices"][0]["message"]["content"]
+#         .replace("\n ", " ")
+#         .strip(" ")
+#         .strip('"')
+#     )
+#     return response
+
+def llm_gpt_35(messages, max_gen=100):
+    # 替换为自己的KEY
+    messages = [{"role": message["role"], "content": message["content"]} for message in messages]
+    api_key = ""
+    try:
+        api_url = 'https://one.aiskt.com/v1/chat/completions'
+        # 设置请求头部，包括 API 密钥
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+        # 准备请求的数据
+        payload = {
+            'model': "gpt-3.5-turbo-16k",
+            'messages': messages,
+            'temperature': 0
+        }
+        # 发送 POST 请求
+        response = requests.post(api_url, headers=headers, data=json.dumps(payload))
+        # print(response)
+        # 检查响应状态
+        if response.status_code == 200:
+            # 解析响应并提取需要的信息
+            data = response.json()
+            return data['choices'][0]['message']['content']
+        else:
+            return f'Error: Received status code {response.status_code}'
+    except Exception as e:
+        return 'An error occurred while sending the request'
+    # count = 0
+    # while True:
+    #     if count > 3:
+    #         break
+    #     try:
+    #         rsp = openai.ChatCompletion.create(
+    #             model="gpt-3.5-turbo-16k",
+    #             messages=messages,
+    #             temperature=0.0,
+    #             top_p=1,
+    #             max_tokens=max_gen,
+    #             frequency_penalty=0,
+    #             presence_penalty=0,
+    #         )
+    #         print(rsp)
+    #         response = (
+    #             rsp["choices"][0]["message"]["content"]
+    #             .replace("\n ", " ")
+    #             .strip(" ")
+    #             .strip('"')
+    #         )
+    #         return response
+    #     except Exception as e:
+    #         time.sleep(2)
+    #         print(e)
+    #         count += 1
+    #         continue
+
+    # return ""
+
 
 @AGENT_REGISTRY.register()
 class AlfredAgent(SimpleAgent):
@@ -27,7 +111,7 @@ class AlfredAgent(SimpleAgent):
         self.chat_history = []
         self.task_description = agent_config.get("task_description")
 
-        self.llm = create_llm(agent_config.get("llm"))
+        # self.llm = create_llm(agent_config.get("llm"))
         self.output_parser = RegexOutputParser(RegexOutputParser.ALFRED_ACTION_REGEX1)
         self.error_cache = []
         self.previous_action = None
@@ -175,7 +259,8 @@ class AlfredAgent(SimpleAgent):
                     feedback=self.env.feedback_builder.build(
                         "Start",
                         task_description=self.task_description,
-                        observation=self.env.get_observation(self),
+                        observation=self.env.get_look_around_observation(self),
+                        # observation=self.env.get_observation(self),
                     ),
                 )
         elif "feedback:" in response.lower() or "obs:" in response.lower():
@@ -183,7 +268,7 @@ class AlfredAgent(SimpleAgent):
                 success=False,
                 response=response,
                 feedback=self.env.feedback_builder.build(
-                    "InvalidAction",
+                    "InvalidAction", "failure.selfFeedback"
                 ),
             )
         else:
@@ -202,6 +287,8 @@ class AlfredAgent(SimpleAgent):
                     "toggle_on",
                     "toggle_off",
                     "slice",
+                    "goto",
+                    "inspect"
                 ]:
                     obj_name = action_arg2.strip("'").strip('"')
                     obj_id = self._get_obj_id_by_name(obj_name)
@@ -224,6 +311,9 @@ class AlfredAgent(SimpleAgent):
                         )
                 elif action_name in [
                     "put",
+                    "heat",
+                    "clean",
+                    "cool"
                 ]:
                     obj_name = action_arg1.strip("'").strip('"')
                     obj_id = self._get_obj_id_by_name(obj_name)
@@ -275,11 +365,13 @@ class AlfredAgent(SimpleAgent):
         if len(self.error_cache) > 0:
             prompts += deepcopy(self.error_cache)
         # prompts.append({"role": "system", "content": str(prompt)})
-
+        logger.info(f"History: {prompts[1:]}")
         self.history_all[f"{len(self.history_all)}"] = prompts[1:]
-
+        # with open("logs/history.json", "w") as fp:
+        #     json.dump(self.history_all, fp, indent=4)
         self.chat_history.append({"role": "system", "content": str(prompt)})
         # response = self.llm(messages=create_llm_prompts(messages=prompts))
+        # print("*****",prompt)
         # print(prompts)
         response = llm_gpt_35(prompts)
         logger.info(response)
@@ -323,7 +415,8 @@ class AlfredAgentReact(AlfredAgent):
                     feedback=self.env.feedback_builder.build(
                         "Start",
                         task_description=self.task_description,
-                        observation=self.env.get_observation(self),
+                        observation=self.env.get_look_around_observation(self),
+                        # observation=self.env.get_observation(self)
                     ),
                 )
         else:
@@ -363,8 +456,7 @@ class AlfredAgentReact(AlfredAgent):
                     feedback=act_resp.get("feedback", None),
                 )
             return dict(response=response, feedback="OK.", success=True)
-
-
+        
 @AGENT_REGISTRY.register()
 class AlfredExpertAgent(AlfredAgent):
     def __init__(self, agent_config: Dict) -> None:
@@ -456,9 +548,12 @@ class AlfredExpertAgent(AlfredAgent):
             else:
                 # cur_pos_ = self.env.world.agent_pos
                 # cur_dir = self.env.world.agent_dir
+                start_time = datetime.datetime.now()
                 action_status = self.execute(
                     action=parsed_response["action"], **parsed_response["action_arg"]
                 )
+                end_time = datetime.datetime.now()
+                #print((end_time-start_time).microseconds)
                 logger.info(action_status)
                 parsed_response["feedback"] = action_status.feedback
                 success = action_status.success

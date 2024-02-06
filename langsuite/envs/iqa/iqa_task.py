@@ -20,15 +20,15 @@ IqaPath = Path(__file__).parent.parent.parent.parent
 
 def load_data(data_dir):
     """
-    Load IQA (IQA: Visual Question Answering in Interactive Environments) data from a specified directory.
+        Load IQA (IQA: Visual Question Answering in Interactive Environments) data from a specified directory.
 
-    Args:
-        data_dir (str): The directory containing IQA data files.
+        Args:
+            data_dir (str): The directory containing IQA data files.
 
-    Returns:
-        list: A list of task data dictionaries, each containing world and question-answer pairs.
+        Returns:
+            list: A list of task data dictionaries, each containing world and question-answer pairs.
     """
-    iqa_data = json.load(open(Path(data_dir, "data", "iqa", "iqa_test", "iqa_test_1k.json")))
+    iqa_data = json.load(open(Path(data_dir, "data", "iqa", "iqa_list_qa.json")))
     # iqa_data = json.load(open(Path(data_dir, "data", "iqa", "iqa_list_qa_counts_300.json")))
 
     task_data = []
@@ -48,14 +48,14 @@ def load_data(data_dir):
 
 def success_or_not(info, gold_answer="True"):
     """
-    Check if the inferred answer matches the expected answer.
+        Check if the inferred answer matches the expected answer.
 
-    Args:
-        info: inferred answer to be checked.
-        gold_answer (str): The expected answer. Default is "True".
+        Args:
+            info: inferred answer to be checked.
+            gold_answer (str): The expected answer. Default is "True".
 
-    Returns:
-        bool: True if the inferred answer matches the expected answer, False otherwise.
+        Returns:
+            bool: True if the inferred answer matches the expected answer, False otherwise.
     """
     answer = extract_content(info)
     if answer is None:
@@ -72,22 +72,23 @@ class IqaTask(BaseTask):
     This class provides functions to:
         - Load environment, agents, question-answer pair.
     """
-
+    
     def __init__(self, *, env, template, name, **kwargs) -> None:
         super().__init__(env=env, template=template, name=name, **kwargs)
         self._is_successful: bool = False
         self.success_criterions = [success_or_not]
-        self.stop_criterions = [lambda _: self._timesteps >= 100]
+        self.stop_criterions = [lambda _: self._timesteps >= 30]
 
     @classmethod
     def create(cls, task_cfg, task_data=None):
-        if not task_data:
-            task_data = random.choice(load_data(IqaPath))
 
         env = Iqa2DEnv.create(task_cfg["env"])
         world_confg = deepcopy(task_cfg["world"])
         if "world_data" in task_data.get("data"):
             world_confg.update({"data": task_data["data"]["world_data"]})
+    
+        #HACK XXX
+        setattr(env, 'task_log_file_name', task_data['log_file'])
 
         env.create_world(world_confg)
         env.set_feedback_builder(TemplateBuilder(task_cfg["template"]))
@@ -126,13 +127,13 @@ class IqaTask(BaseTask):
 
     def step(self, action_dict):
         """
-        Perform a step in the environment based on given actions.
+            Perform a step in the environment based on given actions.
 
-        Args:
-            action_dict (dict or str): Actions to be taken by agents in the environment.
+            Args:
+                action_dict (dict or str): Actions to be taken by agents in the environment.
 
-        Returns:
-            tuple: Observation, reward, done flag, and additional information.
+            Returns:
+                tuple: Observation, reward, done flag, and additional information.
         """
         if type(action_dict) == dict:
             if len(action_dict) == 0:
@@ -155,13 +156,13 @@ class IqaTask(BaseTask):
 
     def _determine_stop(self, cur_info):
         """
-        Determine if the agent should stop based on stop criteria.
+            Determine if the agent should stop based on stop criteria.
 
-        Args:
-            cur_info: Current information or state for stop criterion evaluation.
+            Args:
+                cur_info: Current information or state for stop criterion evaluation.
 
-        Returns:
-            bool: True if any stop criterion is met, False otherwise.
+            Returns:
+                bool: True if any stop criterion is met, False otherwise.
         """
         return any(stop_criterion(cur_info) for stop_criterion in self.stop_criterions)
 
@@ -263,13 +264,13 @@ class ExampleTaskRunner(TaskRunner):
 
 def extract_content(input_string):
     """
-    Extract answer enclosed in square brackets from the input string.
+        Extract answer enclosed in square brackets from the input string.
 
-    Args:
-        input_string (str): The input string containing content in square brackets.
+        Args:
+            input_string (str): The input string containing content in square brackets.
 
-    Returns:
-        str or None: The extracted content, or None if no content is found.
+        Returns:
+            str or None: The extracted content, or None if no content is found.
     """
     pattern = r"{}\s*\[([^]]+)\]".format("Answer")
     match = re.search(pattern, input_string)

@@ -4,13 +4,13 @@
 # -*- coding: utf-8 -*-
 
 import os
+from __future__ import annotations
+
 from copy import deepcopy
 
 from langsuite.actions import ActionFeedback
 from langsuite.agents.base_agent import AGENT_REGISTRY
 from langsuite.agents.simple_agent import SimpleAgent
-
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 
 def mock_openai_response(

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from minigrid.core.world_object import Key
+
 from langsuite.actions.base_action import (
     ACTION_REGISTERY,
     BabyAIActionFeedback,

@@ -2,6 +2,8 @@
 # Licensed under the MIT license.
 from __future__ import annotations
 
+
+# -*- coding: utf-8 -*-
 from copy import deepcopy
 
 from langsuite.actions.base_action import ACTION_REGISTERY, ActionFeedback, BaseAction
@@ -50,7 +52,7 @@ class MoveAheadAction(BaseAction):
 
 
 @ACTION_REGISTERY.register()
-class GoToAction(BaseAction):
+class GotoAction(BaseAction):
     def __init__(self, env, agent, degree=90) -> None:
         super().__init__(env=env, agent=agent, degree=degree)
         self.kwlist = ["object_id"]
@@ -59,7 +61,49 @@ class GoToAction(BaseAction):
         return True
 
     def exec(self, **kwargs):
-        object_id = kwargs.get("object_id")
+        if kwargs.get("object_id") is None and "object" not in kwargs:
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "InvalidAction",
+                    "failure.objectNotProvide",
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+
+        if "object_id" in kwargs:
+            object_id = kwargs.get("object_id")
+
+        if "object" in kwargs:
+            object_id = kwargs.get("object").id
+
+        if not self.env.world.contains_object(object_id):
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "InvalidAction",
+                    "failure.objectNotExist",
+                    object=object_id,
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+
+        obj_name = self.env.object_id2name[object_id]
+        obj = self.env.world.get_object(object_id)
+        observed_objects = self.env.get_observed_objects(self.agent)
+        # if obj.id not in observed_objects:
+        #     observation = self.env.get_observation(self.agent)
+        #     return ActionFeedback(
+        #         success=False,
+        #         feedback=self.feedback_builder.build(
+        #             "InvalidAction",
+        #             "failure.objectNotInView",
+        #             max_view_steps=self.agent.max_view_distance / self.agent.step_size,
+        #             object=obj_name,
+        #             observation=observation,
+        #         ),
+        #     )
+        # object_id = kwargs.get("object_id")
         if isinstance(self.env.world.room_polygons, dict):
             x_min, x_max, y_min, y_max = (
                 float("inf"),
@@ -83,12 +127,22 @@ class GoToAction(BaseAction):
         grid_world = GridWorld(x_min, x_max, y_min, y_max, self.agent.step_size)
         agent_direction = get_direction(self.agent.view_vector)
         for obj_id, obj in self.env.world.objects.items():
-            if "Floor" in obj.category:
+            if "Floor" not in obj_id:
                 x_list = list(obj.geometry.shapely_geo.exterior.xy[0][:4])
                 y_list = list(obj.geometry.shapely_geo.exterior.xy[1][:4])
 
-                grid_world.add_object(obj.position.x, obj.position.y, (x_list, y_list))
-        object = self.env.world.id2object.get(object_id)
+                grid_world.add_object(
+                    obj.position.x, obj.position.y, (x_list, y_list)
+                )
+            children = obj.find_all_children()
+            for child in children:
+                child_x_list = list(child.geometry.shapely_geo.exterior.xy[0][:4])
+                child_y_list = list(child.geometry.shapely_geo.exterior.xy[1][:4])
+
+                grid_world.add_object(
+                    child.position.x, child.position.y, (child_x_list, child_y_list)
+                )
+        object = self.env.world.get_object(object_id)
         if object is None:
             return ActionFeedback(
                 success=False,
@@ -122,7 +176,7 @@ class GoToAction(BaseAction):
             and opetation_rotate_list is None
         ):
             return ActionFeedback(
-                success=True,
+                success=False,
                 feedback=self.feedback_builder.build(
                     "GoTo",
                     "failure.default",
@@ -345,7 +399,7 @@ class PutAction(BaseAction):
                 feedback=self.feedback_builder.build(
                     "InvalidAction",
                     "failure.objectNotProvide",
-                    observation=self.env.get_observation(self.agent),
+                    # observation=self.env.get_observation(self.agent),
                 ),
             )
 
@@ -355,7 +409,7 @@ class PutAction(BaseAction):
                 feedback=self.feedback_builder.build(
                     "InvalidAction",
                     "failure.objectNotProvide",
-                    observation=self.env.get_observation(self.agent),
+                    # observation=self.env.get_observation(self.agent),
                 ),
             )
 
@@ -429,8 +483,13 @@ class PutAction(BaseAction):
 
         self.agent.inventory.remove(obj)
         obj.position = receptacle.position
+        children = self.env.find_all_children(obj)
+        for child in children:
+            child.position = receptacle.position
+            self.cleaned_objects[child.id] = child
         receptacle.children[obj.id] = obj
-
+        self.env.world.objects[receptacle.id] = receptacle
+        # print(receptacle.children)
         return ActionFeedback(
             success=True,
             feedback=self.feedback_builder.build(
@@ -442,6 +501,436 @@ class PutAction(BaseAction):
             ),
         )
 
+@ACTION_REGISTERY.register()
+class HeatAction(BaseAction):
+    def __init__(self, env, agent, manipulation_distance=None) -> None:
+        super().__init__(
+            env=env, agent=agent, manipulation_distance=manipulation_distance
+        )
+        self.kwlist = ["object_id", "manipulation_distance"]
+
+    def check_validity(self, **kwargs) -> bool:
+        return True
+
+    def exec(self, **kwargs):
+        """
+        Args:
+            object_id: name of object
+        """
+        manipulation_distance = kwargs.get(
+            "manipulation_distance", self.manipulation_distance
+        )
+
+        if "object_id" not in kwargs and "object" not in kwargs:
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "InvalidAction",
+                    "failure.objectNotProvide",
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+
+        if "receptacle_id" not in kwargs and "receptacle" not in kwargs:
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "InvalidAction",
+                    "failure.objectNotProvide",
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+
+        if "object_id" in kwargs:
+            object_id = kwargs.get("object_id")
+
+        if "object" in kwargs:
+            object_id = kwargs.get("object").id
+
+        if "receptacle_id" in kwargs:
+            receptacle_id = kwargs.get("receptacle_id")
+
+        if "receptacle" in kwargs:
+            receptacle_id = kwargs.get("receptacle").id
+
+        obj_name = self.env.object_id2name[object_id]
+        obj = self.agent.get_object_in_inventory(object_id)
+        if not obj:
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "Heat",
+                    "failure.NotInInventory",
+                    object=obj_name,
+                    observation=self.env.get_observation(self.agent),
+                    inventory=self.agent.get_inventory(),
+                ),
+            )
+
+        if not self.env.world.contains_object(receptacle_id):
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "InvalidAction",
+                    "failure.objectNotExist",
+                    object=receptacle_id,
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+
+        receptacle = self.env.world.get_object(receptacle_id)
+        receptacle_name = self.env.object_id2name[receptacle_id]
+        
+        if not obj or not receptacle:
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "Heat",
+                    "failure.default",
+                    object=obj_name,
+                    receptacle=receptacle_name,
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+        if receptacle.props["objectType"] not in ["Toaster", "StoveBurner", "Microwave"]:
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "Heat",
+                    "failure.notHeater",
+                    object=obj_name,
+                    receptacle=receptacle_name,
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+        observed_objects = self.env.get_observed_objects(self.agent)
+        if receptacle.id not in observed_objects:
+            # if not self.agent.can_observe(receptacle.geometry):
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "Heat",
+                    "failure.notInView",
+                    receptacle=receptacle_name,
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+
+        # if not self.agent.can_manipulate(receptacle.position, manipulation_distance):
+        #     return ActionFeedback(
+        #         success=False,
+        #         feedback=f"Object {receptacle_id} is not in manipulation distance.",
+        #     )
+
+        self.agent.inventory.remove(obj)
+        obj.position = receptacle.position
+        children = self.env.find_all_children(obj)
+        for child in children:
+            child.position = receptacle.position
+            child.props["temperature"] = "Hot"
+            self.heated_objects[child.id] = child
+        receptacle.children[obj.id] = obj
+        self.env.world.objects[receptacle.id] = receptacle
+        self.heated_objects[obj.id] = obj
+        # print(receptacle.children)
+        return ActionFeedback(
+            success=True,
+            feedback=self.feedback_builder.build(
+                "Heat",
+                "success.default",
+                object=obj_name,
+                receptacle=receptacle_name,
+                observation=self.env.get_observation(self.agent),
+            ),
+        )
+
+@ACTION_REGISTERY.register()
+class CoolAction(BaseAction):
+    def __init__(self, env, agent, manipulation_distance=None) -> None:
+        super().__init__(
+            env=env, agent=agent, manipulation_distance=manipulation_distance
+        )
+        self.kwlist = ["object_id", "manipulation_distance"]
+
+    def check_validity(self, **kwargs) -> bool:
+        return True
+
+    def exec(self, **kwargs):
+        """
+        Args:
+            object_id: name of object
+        """
+        # self.env.render()
+        logger.info("kwargs")
+        logger.info(kwargs)
+        manipulation_distance = kwargs.get(
+            "manipulation_distance", self.agent.max_manipulate_distance
+        )
+
+        if kwargs.get("object_id") is None and len(kwargs.get("object_name", "")) > 0:
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "InvalidAction",
+                    "failure.invalidObjectName",
+                    object=kwargs.get("object_name"),
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+
+        if "receptacle_id" not in kwargs and "receptacle" not in kwargs:
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "InvalidAction",
+                    "failure.objectNotProvide",
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+
+        if "object_id" in kwargs:
+            object_id = kwargs.get("object_id")
+
+        if "object" in kwargs:
+            object_id = kwargs.get("object").id
+
+        if "receptacle_id" in kwargs:
+            receptacle_id = kwargs.get("receptacle_id")
+
+        if "receptacle" in kwargs:
+            receptacle_id = kwargs.get("receptacle").id
+
+        obj_name = self.env.object_id2name[object_id]
+        obj = self.agent.get_object_in_inventory(object_id)
+        if not obj:
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "Cool",
+                    "failure.NotInInventory",
+                    object=obj_name,
+                    observation=self.env.get_observation(self.agent),
+                    inventory=self.agent.get_inventory(),
+                ),
+            )
+
+        if not self.env.world.contains_object(receptacle_id):
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "InvalidAction",
+                    "failure.objectNotExist",
+                    object=receptacle_id,
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+
+        receptacle = self.env.world.get_object(receptacle_id)
+        receptacle_name = self.env.object_id2name[receptacle_id]
+        
+        if not obj or not receptacle:
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "Cool",
+                    "failure.default",
+                    object=obj_name,
+                    receptacle=receptacle_name,
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+        if receptacle.props["objectType"] not in ["Fridge"]:
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "Cool",
+                    "failure.notCooler",
+                    object=obj_name,
+                    receptacle=receptacle_name,
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+        observed_objects = self.env.get_observed_objects(self.agent)
+        if receptacle.id not in observed_objects:
+            # if not self.agent.can_observe(receptacle.geometry):
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "Cool",
+                    "failure.notInView",
+                    receptacle=receptacle_name,
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+
+        # if not self.agent.can_manipulate(receptacle.position, manipulation_distance):
+        #     return ActionFeedback(
+        #         success=False,
+        #         feedback=f"Object {receptacle_id} is not in manipulation distance.",
+        #     )
+
+        self.agent.inventory.remove(obj)
+        obj.position = receptacle.position
+        obj.props["temperature"] = "Cold"
+        children = self.env.find_all_children(obj)
+        for child in children:
+            child.position = receptacle.position
+            child.props["temperature"] = "Cold"
+            self.cooled_objects[child.id] = child
+        receptacle.children[obj.id] = obj
+        self.env.world.objects[receptacle.id] = receptacle
+        self.cooled_objects[obj.id] = obj
+        # print(receptacle.children)
+        return ActionFeedback(
+            success=True,
+            feedback=self.feedback_builder.build(
+                "Cool",
+                "success.default",
+                object=obj_name,
+                receptacle=receptacle_name,
+                observation=self.env.get_observation(self.agent),
+            ),
+        )
+
+@ACTION_REGISTERY.register()
+class CleanAction(BaseAction):
+    def __init__(self, env, agent, manipulation_distance=None) -> None:
+        super().__init__(
+            env=env, agent=agent, manipulation_distance=manipulation_distance
+        )
+        self.kwlist = ["object_id", "manipulation_distance"]
+
+    def check_validity(self, **kwargs) -> bool:
+        return True
+
+    def exec(self, **kwargs):
+        """
+        Args:
+            object_id: name of object
+        """
+        manipulation_distance = kwargs.get(
+            "manipulation_distance", self.manipulation_distance
+        )
+
+        if "object_id" not in kwargs and "object" not in kwargs:
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "InvalidAction",
+                    "failure.objectNotProvide",
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+
+        if "receptacle_id" not in kwargs and "receptacle" not in kwargs:
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "InvalidAction",
+                    "failure.objectNotProvide",
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+
+        if "object_id" in kwargs:
+            object_id = kwargs.get("object_id")
+
+        if "object" in kwargs:
+            object_id = kwargs.get("object").id
+
+        if "receptacle_id" in kwargs:
+            receptacle_id = kwargs.get("receptacle_id")
+
+        if "receptacle" in kwargs:
+            receptacle_id = kwargs.get("receptacle").id
+        obj_name = self.env.object_id2name[object_id]
+        obj = self.agent.get_object_in_inventory(object_id)
+        if not obj:
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "Clean",
+                    "failure.NotInInventory",
+                    object=obj_name,
+                    observation=self.env.get_observation(self.agent),
+                    inventory=self.agent.get_inventory(),
+                ),
+            )
+
+        if not self.env.world.contains_object(receptacle_id):
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "InvalidAction",
+                    "failure.objectNotExist",
+                    object=receptacle_id,
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+
+        receptacle = self.env.world.get_object(receptacle_id)
+        receptacle_name = self.env.object_id2name[receptacle_id]
+        if receptacle.props["objectType"] not in ["Sink", "SinkBasin", "Bathtub", "BathtubBasin"]:
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "Clean",
+                    "failure.notBasin",
+                    object=obj_name,
+                    receptacle=receptacle_name,
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+        if not obj or not receptacle:
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "Clean",
+                    "failure.default",
+                    object=obj_name,
+                    receptacle=receptacle_name,
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+        observed_objects = self.env.get_observed_objects(self.agent)
+        if receptacle.id not in observed_objects:
+            # if not self.agent.can_observe(receptacle.geometry):
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "Clean",
+                    "failure.notInView",
+                    receptacle=receptacle_name,
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+
+        # if not self.agent.can_manipulate(receptacle.position, manipulation_distance):
+        #     return ActionFeedback(
+        #         success=False,
+        #         feedback=f"Object {receptacle_id} is not in manipulation distance.",
+        #     )
+
+        self.agent.inventory.remove(obj)
+        obj.position = receptacle.position
+        children = self.env.find_all_children(obj)
+        for child in children:
+            child.position = receptacle.position
+            self.cleaned_objects[child.id] = child
+        receptacle.children[obj.id] = obj
+        self.env.world.objects[receptacle.id] = receptacle
+        self.cleaned_objects[obj.id] = obj
+        # print(receptacle.children)
+        return ActionFeedback(
+            success=True,
+            feedback=self.feedback_builder.build(
+                "Clean",
+                "success.default",
+                object=obj_name,
+                receptacle=receptacle_name,
+                observation=self.env.get_observation(self.agent),
+            ),
+        )
 
 @ACTION_REGISTERY.register()
 class DropAction(BaseAction):
@@ -560,11 +1049,11 @@ class OpenAction(BaseAction):
                 ),
             )
 
-        if not self.agent.can_manipulate(obj.position, manipulation_distance):
-            return ActionFeedback(
-                success=False,
-                feedback=f"Object {obj_name} is not in manipulation distance.",
-            )
+        # if not self.agent.can_manipulate(obj.position, manipulation_distance):
+        #     return ActionFeedback(
+        #         success=False,
+        #         feedback=f"Object {obj_name} is not in manipulation distance.",
+        #     )
 
         if "openable" in obj.props and obj.props["openable"]:
             obj.props["openness"] = openness
@@ -695,6 +1184,108 @@ class ToggleOnAction(BaseAction):
                     observation=self.env.get_observation(self.agent),
                 ),
             )
+@ACTION_REGISTERY.register()
+class InspectAction(BaseAction):
+    def __init__(self, env, agent, manipulation_distance=None) -> None:
+        super().__init__(
+            env=env, agent=agent, manipulation_distance=manipulation_distance
+        )
+        self.kwlist = ["object_id", "manipulation_distance"]
+
+    def check_validity(self, **kwargs) -> bool:
+        return True
+
+    def exec(self, **kwargs):
+        """
+        Args:
+            object_id: name of object
+        """
+        logger.info("kwargs")
+        logger.info(kwargs)
+        manipulation_distance = kwargs.get(
+            "manipulation_distance", self.agent.max_manipulate_distance
+        )
+
+        if kwargs.get("object_id") is None and len(kwargs.get("object_name", "")) > 0:
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "InvalidAction",
+                    "failure.invalidObjectName",
+                    object=kwargs.get("object_name"),
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+
+        if kwargs.get("object_id") is None and "object" not in kwargs:
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "InvalidAction",
+                    "failure.objectNotProvide",
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+
+        if "object_id" in kwargs:
+            object_id = kwargs.get("object_id")
+
+        if "object" in kwargs:
+            object_id = kwargs.get("object").id
+
+        if not self.env.world.contains_object(object_id):
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "InvalidAction",
+                    "failure.objectNotExist",
+                    object=object_id,
+                    observation=self.env.get_observation(self.agent),
+                ),
+            )
+
+        obj_name = self.env.object_id2name[object_id]
+        obj = self.env.world.get_object(object_id)
+        observed_objects = self.env.get_observed_objects(self.agent)
+        if obj.id not in observed_objects:
+            observation = self.env.get_observation(self.agent)
+            return ActionFeedback(
+                success=False,
+                feedback=self.feedback_builder.build(
+                    "InvalidAction",
+                    "failure.objectNotInView",
+                    max_view_steps=self.agent.max_view_distance / self.agent.step_size,
+                    object=obj_name,
+                    observation=observation,
+                ),
+            )
+        # TODO
+        # if not self.agent.can_observe(obj.geometry):
+        #     return ActionFeedback(
+        #         success=False,
+        #         feedback=self.feedback_builder.build("PickUp", "failure.notInView", object=object_id)
+        #     )
+
+        # if not self.agent.can_manipulate(obj.position, manipulation_distance):
+        #     return ActionFeedback(
+        #         success=False,
+        #         feedback=self.feedback_builder.build(
+        #             "InvalidAction",
+        #             "failure.objectNotInMainpulation",
+        #             object=obj_name,
+        #             manipulation_distance=manipulation_distance,
+        #             observation=self.env.get_observation(self.agent),
+        #         ),
+        #     )
+        return ActionFeedback(
+            success=True,
+            feedback=self.feedback_builder.build(
+                "Inspect",
+                "success.default",
+                object=obj_name,
+                observation=self.env.get_obj_description(obj),
+            ),
+        )
 
 
 @ACTION_REGISTERY.register()
@@ -990,7 +1581,7 @@ class SliceAction(BaseAction):
                     sliced_obj.props["isSliced"] = True
                     sliced_obj.props["cookable"] = True
                     sliced_obj.props["objectType"] = (
-                        sliced_obj.props["objectType"] + "Sliced"
+                        "Sliced" + sliced_obj.props["objectType"]
                     )
                     self.env.world.add_object(sliced_obj)
                     self.env.world.id2object[sliced_obj.id] = sliced_obj

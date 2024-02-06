@@ -8,7 +8,7 @@ from collections import OrderedDict
 from minigrid.envs.babyai.core.levelgen import LevelGen
 
 from langsuite.envs.babyai import bonus_levels
-
+from langsuite.envs.babyai import test_levels
 RegisteredEnvList = [
     # https://github.com/Farama-Foundation/Minigrid.git
     # BabyAI - Language based levels - GoTo
@@ -483,7 +483,6 @@ def register_levels(env_list):
     """
     Register OpenAI gym environments for all levels in a file
     """
-
     # Iterate through global names
     for env in env_list:
         try:
@@ -510,3 +509,4 @@ def register_levels(env_list):
 # Compatible with https://github.com/mila-iqia/babyai/blob/master/babyai/levels/levelgen.py
 register_levels(RegisteredEnvList)
 register_levels(bonus_levels.RegisteredEnvList)
+register_levels(test_levels.RegisteredEnvList)

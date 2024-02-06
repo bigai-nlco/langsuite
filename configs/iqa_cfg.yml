@@ -1,0 +1,30 @@
+task: IqaTask:Iqa2DEnv
+template: ./langsuite/envs/iqa/templates/iqa_cot-hl.json
+#template: ./langsuite/envs/iqa/templates/iqa_cot_localization-hl.json
+#template: ./langsuite/envs/iqa/templates/iqa-hl.json
+
+env:
+  type: Iqa2DEnv
+  is_high_level: True
+
+world:
+  type: IqaWorld
+  id: iqa_world
+  grid_size: 0.25
+  asset_path: ./data/procthor/asset-database.json
+  metadata_path: ./data/procthor/ai2thor-object-metadata.json
+  receptacles_path: ./data/procthor/receptacles.json
+
+agents:
+  - type: IqaAgent
+    position: 'random'
+    inventory_capacity: 1
+    focal_length: 10
+    max_manipulate_distance: 5
+    max_view_distance: 5
+    step_size: 0.25
+    view_degree: 60
+    llm:
+      llm_type: "ChatOpenAI"
+    mem_file: ./iqa_data_folder/Reflexion-high-level-0/memory.txt
+question_type: 0

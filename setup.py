@@ -16,6 +16,14 @@ with open(
 ) as f:
     requirements = f.readlines()
 
+with open(
+    path.join(path.abspath(path.dirname(__file__)), "requirements_dev.txt"),
+    encoding="utf-8",
+) as f:
+    dev_requirements = f.readlines()
+
+extras = {"dev": dev_requirements}
+
 setup(
     name="langsuite",
     version=__version__,
@@ -23,5 +31,6 @@ setup(
     packages=find_packages(),
     install_requires=requirements,
     entry_points={"console_scripts": ["langsuite=langsuite.__main__:main"]},
+    extras_require=extras,
     python_requires=">=3.8",
 )

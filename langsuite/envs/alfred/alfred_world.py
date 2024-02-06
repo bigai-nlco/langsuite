@@ -2,6 +2,8 @@
 # Licensed under the MIT license.
 from __future__ import annotations
 
+
+# -*- coding: utf-8 -*-
 import random
 from collections import defaultdict
 from pathlib import Path
@@ -264,6 +266,14 @@ class AlfredWorld(World):
     def create(cls, world_config):
         world_id = world_config.get("id", "AlfredWorld")
         world = cls(world_id)
+
+        # asset_path = world_config["asset_path"]
+        # metadata_path = world_config["metadata_path"]
+        # receptacles_path = world_config["receptacles_path"]
+
+        # assets = io_utils.load_assets(asset_path)
+        # metadata = io_utils.load_object_metadata(metadata_path)
+        # receptacles = io_utils.load_receptacles(receptacles_path)
 
         world_data = world_config["data"]
         room = {}

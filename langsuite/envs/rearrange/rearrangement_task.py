@@ -29,7 +29,7 @@ def load_data(data_dir, stage):
         return None
 
     with open(
-        Path(data_dir, "data", "rearrange", "rearrange_test", stage + ".json"),
+        Path(data_dir, "data", "rearrange", stage + ".json"),
         "r",
         encoding="utf-8",
     ) as scene_f:
@@ -131,11 +131,11 @@ class RearrangementTask(BaseTask):
     @classmethod
     def create(cls, task_cfg, task_data=None):
         if not task_data:
-            task_data = random.choice(load_data(RearrangePath, "test"))
-            # task_data = load_data(RearrangePath, "train")
-            # index = random.randint(0, len(task_data) - 1)
-            # task_data = task_data[1337]
-            # print("index", index)
+            # task_data = random.choice(load_data(RearrangePath))
+            task_data = load_data(RearrangePath, "train")
+            index = random.randint(0, len(task_data) - 1)
+            task_data = task_data[1337]
+            print("index", index)
             # logger.info("Task index is " + str(index))
 
         env = Rearrange2DEnv.create(task_cfg["env"])

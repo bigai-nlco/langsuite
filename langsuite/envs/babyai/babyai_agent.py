@@ -1,6 +1,7 @@
 # Copyright (c) BIGAI Research. All rights reserved.
 # Licensed under the MIT license.
 from __future__ import annotations
+import json
 
 import re
 from copy import deepcopy
@@ -8,6 +9,7 @@ from math import floor
 from typing import Dict
 
 import numpy as np
+import requests
 
 from langsuite.actions import get_action
 from langsuite.actions.base_action import BabyAIActionFeedback
@@ -16,7 +18,40 @@ from langsuite.envs.babyai.bot import BabyAIBot
 from langsuite.llms import create_llm, create_llm_prompts, process_llm_results
 from langsuite.llms.output_parsers import RegexOutputParser
 from langsuite.shapes import Point2D, Vector2D
+from langsuite.utils import logging
 from langsuite.utils.logging import logger
+
+
+
+def llm_gpt_35(messages, max_gen=100):
+    # 替换为自己的KEY
+    messages = [{"role": message["role"], "content": message["content"]} for message in messages]
+    api_key = ""
+    try:
+        api_url = 'https://one.aiskt.com/v1/chat/completions'
+        # 设置请求头部，包括 API 密钥
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+        # 准备请求的数据
+        payload = {
+            'model': "gpt-3.5-turbo-16k",
+            'messages': messages
+        }
+        # 发送 POST 请求
+        response = requests.post(api_url, headers=headers, data=json.dumps(payload))
+#        print(response.text)
+        # 检查响应状态
+        if response.status_code == 200:
+            # 解析响应并提取需要的信息
+            data = response.json()
+            return data['choices'][0]['message']['content']
+        else:
+            return f'Error: Received status code {response.status_code}'
+    except Exception as e:
+        return 'An error occurred while sending the request'
+
 
 
 @AGENT_REGISTRY.register()
@@ -24,7 +59,7 @@ class BabyAIAgent(Agent):
     def __init__(self, agent_config: Dict) -> None:
         super().__init__(agent_config=agent_config)
 
-        self.llm = create_llm(agent_config["llm"])
+        self.llm = create_llm(agent_config.get("llm", None))
 
         self.set_config(agent_config)
         self.view_vector = None
@@ -35,7 +70,7 @@ class BabyAIAgent(Agent):
 
         self.vis_mask = None
         self.inventory = []
-        logger.info(f"Successfully add agent: {self.cfg}")
+        logger._logger.info(f"Successfully add agent: {self.cfg}")
         self.output_parser = RegexOutputParser(RegexOutputParser.BABYAI_ACTION_REGEX)
         self.status = dict(started=False)
         self.chat_history = []
@@ -79,7 +114,7 @@ class BabyAIAgent(Agent):
         parsed_response = {}
         response = self.fetch_prompt_response(prompt)
         parsed_response = self.parse_response(response)
-        logger.info(parsed_response)
+        logger._logger.info(parsed_response)
         success = parsed_response.get("success", True)
         if (
             success
@@ -97,7 +132,16 @@ class BabyAIAgent(Agent):
                     **parsed_response["action_arg"],
                 )
                 # TODO what if action_status is None
-                logger.info(action_status)
+                if action_status is None:
+                    action_status = BabyAIActionFeedback(
+                        success=False,
+                        task_success=False,
+                        feedback=self.env.feedback_builder.build(
+                            'InvalidAction',
+                            'failure.actionNotFound'
+                        )
+                    )
+                logger._logger.info(action_status)
                 parsed_response["feedback"] = action_status.feedback
                 success = action_status.success
                 task_success = action_status.task_success
@@ -120,9 +164,9 @@ class BabyAIAgent(Agent):
         return success, parsed_response
 
     def execute(self, *, action: str = None, **action_kwargs):
-        logger.info(f"Working on action {action}")
+        logger._logger.info(f"Working on action {action}")
         if not self.is_valid_action(action):
-            logger.info(f"Invalid action: {action}")
+            logger._logger.info(f"Invalid action: {action}")
             return BabyAIActionFeedback(
                 success=False, task_success=False, feedback=f"Invalid action: {action}"
             )
@@ -135,7 +179,7 @@ class BabyAIAgent(Agent):
         if action_or:
             return action_or.step(**action_kwargs)
         else:
-            logger.info(f"Action {action} not found in environment.")
+            logger._logger.info(f"Action {action} not found in environment.")
             return BabyAIActionFeedback(
                 success=False,
                 task_success=False,
@@ -242,8 +286,10 @@ class BabyAIAgent(Agent):
 
         self.history_all[f"{len(self.history_all)}"] = prompts[1:]
 
-        response = self.llm(messages=create_llm_prompts(messages=prompts))
-        logger.info(response)
+#        response = self.llm(messages=create_llm_prompts(messages=prompts))
+        response = llm_gpt_35(prompts)
+
+        logger._logger.info(response)
         return process_llm_results(response)
 
     def reset(self):
@@ -310,7 +356,7 @@ class BabyAIAgentZeroShot(BabyAIAgent):
         if not response:
             return False, dict(feedback=prompt)
         parsed_response = self.parse_response(response)
-        logger.info(parsed_response)
+        logger._logger.info(parsed_response)
         success = True
         if "action" in parsed_response and parsed_response["action"] != "UserInput":
             if parsed_response["action"] == "BabyAIPass":
@@ -320,7 +366,7 @@ class BabyAIAgentZeroShot(BabyAIAgent):
                 success = False
             else:
                 action_status = self.execute(action=parsed_response["action"])
-                logger.info(action_status)
+                logger._logger.info(action_status)
                 parsed_response["feedback"] = action_status.feedback
                 success = action_status.success
         if success:
@@ -455,6 +501,84 @@ class BabyAIAgentReact(BabyAIAgent):
                 )
             return dict(response=response, feedback="OK.", success=True)
 
+@AGENT_REGISTRY.register()
+class BabyAIAgentReflexion(BabyAIAgent):
+    def __init__(self, agent_config: Dict) -> None:
+        super().__init__(agent_config)
+        self.history = dict()
+        with open('/home/wtding/langsuite-dev/babyai_gpt3.5_reflexion_emmem/save/memory.txt', 'r') as log_file:
+            for line in log_file.readlines():
+                data: dict = json.loads(line.strip())
+                for k, v in data.items():
+                    self.history[k] = v
+
+    def parse_response(self, response):
+        if not self.status["started"]:
+            if any([not_tok in response for not_tok in ["not", "don't"]]):
+                return dict(
+                    response=response,
+                    feedback=self.env.feedback_builder.build(
+                        "intro",
+                        max_view_steps=self.env.world.agent_view_size,
+                        side_steps=floor(self.env.world.agent_view_size / 2),
+                        example=self.env.feedback_builder.build("example"),
+                    ),
+                )
+            else:
+                self.status["started"] = True
+                history = self.history.get(self.env.task_log_file_name)
+                logging.logger._logger.info(f'{self.env.task_log_file_name}: {history}')
+                # if history is not None:
+                #     desc = self.env.get_task_def() + 'Your memory for the task is below:\n' + history
+                # else:
+                #     desc = self.env.get_task_def()
+                if history is None or self.env.get_task_def() is None:
+                    info = f"Do not need refleaction for {self.env.task_log_file_name}"
+                    raise Exception(info)
+                desc = self.env.get_task_def() + 'Your memory for the task is below:\n' + history
+                return dict(
+                    response=response,
+                    feedback=self.env.feedback_builder.build(
+                        "BabyAIStart",
+                        task=desc,
+                        observation=self.env.get_observation(self),
+                    ),
+                )
+        else:
+            thought = []
+            act = []
+            for line in response.split("\n"):
+                line = line.strip()
+                if len(line) == 0:
+                    continue
+                if any(
+                    [
+                        think_tok in line.lower()
+                        for think_tok in ["thought:", "think:", "i think:"]
+                    ]
+                ):
+                    thought.append("".join(line.split(":")[1:]))
+                elif any([act_tok in line.lower() for act_tok in ["act:", "action:"]]):
+                    act.append("".join(line.split(":")[1:]))
+                elif len(act) == 0 and len(thought) > 0:
+                    thought.append(line)
+                else:
+                    act.append(line)
+            response = []
+            if len(thought) > 0:
+                response.append(("thought", " ".join(thought)))
+            if len(act) > 0:
+                act = " ".join(act).strip()
+                act_resp = super().parse_response(act)
+                response.append(("act", act))
+                return dict(
+                    success=act_resp.get("success", True),
+                    response=response,
+                    action=act_resp.get("action", "Pass"),
+                    action_arg=act_resp.get("action_arg", {}),
+                    feedback=act_resp.get("feedback", None),
+                )
+            return dict(response=response, feedback="OK.", success=True)
 
 @AGENT_REGISTRY.register()
 class BabyAIExpertAgent(BabyAIAgent):
@@ -563,7 +687,7 @@ class BabyAIExpertAgent(BabyAIAgent):
             return success, parsed_response
         expert_action = self.actions.pop(0)
         parsed_response = self.parse_expert_action(expert_action)
-        logger.info(parsed_response)
+        logger._logger.info(parsed_response)
         success = True
         if "action" in parsed_response and parsed_response["action"] != "UserInput":
             if parsed_response["action"] == "BabyAIPass":
@@ -582,7 +706,7 @@ class BabyAIExpertAgent(BabyAIAgent):
                 action_status = self.execute(
                     action=parsed_response["action"], **parsed_response["action_arg"]
                 )
-                logger.info(action_status)
+                logger._logger.info(action_status)
                 parsed_response["feedback"] = action_status.feedback
                 success = action_status.success
                 task_success = action_status.task_success
@@ -592,9 +716,9 @@ class BabyAIExpertAgent(BabyAIAgent):
         return success, parsed_response
 
     def execute(self, *, action: str = None, **action_kwargs):
-        logger.info(f"Working on action {action}")
+        logger._logger.info(f"Working on action {action}")
         if not self.is_valid_action(action):
-            logger.info(f"Invalid action: {action}")
+            logger._logger.info(f"Invalid action: {action}")
             return BabyAIActionFeedback(
                 success=False, task_success=False, feedback=f"Invalid action: {action}"
             )
@@ -607,7 +731,7 @@ class BabyAIExpertAgent(BabyAIAgent):
         if action_or:
             return action_or.step(**action_kwargs)
         else:
-            logger.info(f"Action {action} not found in environment.")
+            logger._logger.info(f"Action {action} not found in environment.")
             return BabyAIActionFeedback(
                 success=False,
                 task_success=False,

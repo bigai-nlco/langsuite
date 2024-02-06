@@ -18,11 +18,10 @@ from langsuite.world import WORLD_REGISTRY, Object2D, ObjectType, Room, Wall, Wo
 
 class IqaWall(Wall):
     """
-    An extended Wall class for IQA environments.
+        An extended Wall class for IQA environments.
 
-    This class represents a wall in an IQA environment.
+        This class represents a wall in an IQA environment.
     """
-
     def __init__(
         self,
         wall_id: str,
@@ -68,11 +67,10 @@ class IqaWall(Wall):
 
 class IqaRoom(Room):
     """
-    An extended Room class for IQA environments.
+        An extended Room class for IQA environments.
 
-    This class represents a room in an IQA environment.
+        This class represents a room in an IQA environment.
     """
-
     @classmethod
     def create(cls, id, polys_2d):
         polys_2d = Polygon2D(polys_2d)
@@ -104,11 +102,10 @@ class IqaRoom(Room):
 
 class IqaObject(Object2D):
     """
-    An extended Object class for IQA environments.
+        An extended Object class for IQA environments.
 
-    This class represents a room in an IQA environment.
+        This class represents a room in an IQA environment.
     """
-
     colorscales = list(CSS4_COLORS.keys())
     color_registry = defaultdict()
 
@@ -188,6 +185,15 @@ class IqaObject(Object2D):
             children=children,
             props=props,
         )
+    
+    def find_all_children(self):
+        children = []
+        if len(self.children) > 0:
+            for child in self.children.values():
+                children.append(child)
+                children.extend(child.find_all_children())
+        return children
+
 
     def plot(self, axes=None):
         if self.geometry is None:
@@ -259,14 +265,13 @@ class IqaWorld(World):
         - Handling of room, wall, and object additions.
         - Checking for object existence.
     """
-
     @classmethod
     def create(cls, world_config):
         world_id = world_config.get("id", "IqaWorld")
         world = cls(world_id)
         world.grid_size = world_config["grid_size"]
-        # asset_path = world_config["asset_path"]
-        # assets = ai2thor_utils.load_assets(asset_path)
+        asset_path = world_config["asset_path"]
+        assets = ai2thor_utils.load_assets(asset_path)
         world_data = world_config["data"]
 
         def get_room_polygons(objects, scene_corner_points):

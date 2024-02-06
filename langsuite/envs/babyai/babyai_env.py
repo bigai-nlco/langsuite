@@ -42,7 +42,9 @@ class BabyAIEnv(LangSuiteEnv):
         assert world_type == "BabyAIWorld", f"Invalid world type: {world_type}"
         world_id = cfg.pop("id")
         seed = cfg.pop("seed", 0)
-        print(level_dict)
+        #HACK XXX
+        if 'log_file' in world_cfg:
+            setattr(self, 'task_log_file_name', world_cfg['log_file'])
         if world_id.startswith("BabyAI"):
             world_id = world_id.split("-")[1]
         if world_id in level_dict:

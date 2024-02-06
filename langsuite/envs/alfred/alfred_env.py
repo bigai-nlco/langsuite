@@ -2,6 +2,8 @@
 # Licensed under the MIT license.
 from __future__ import annotations
 
+
+# -*- coding: utf-8 -*-
 import random
 from collections import defaultdict
 from copy import deepcopy
@@ -169,11 +171,12 @@ class Alfred2DEnv(LangSuiteEnv):
     def get_task_info(self):
         return {
             "state": ActionFeedback(
-                success=True, feedback=self.feedback_builder.build("intro", example=self.feedback_builder.build("example")) 
-            )
+                success=True, feedback=self.feedback_builder.build("intro")
+            ).to_json()
         }
 
     def step_single_agent(self, agent_id: str, action):
+        """Updates an environment with actions returning the next agent observation, the reward for taking that actions, if the environment has terminated or truncated due to the latest action and information from the environment about the step, i.e. metrics, debug info."""
         status, info = self.agents[agent_id].step(action)
         if "Stop" == info.get("action"):
             info["is_terminated"] = True
@@ -186,9 +189,13 @@ class Alfred2DEnv(LangSuiteEnv):
             return True
         return False
 
+    # @property
+    # def is_terminated(self):
+    #     return self._terminated
+
     def reset(self):
         """Resets the environment to an initial state, required before calling step. Returns the first agent observation for an episode and information, i.e. metrics, debug info."""
-        raise NotImplementedError
+        pass
 
     def render(self, mode="", **kwargs):
         """Renders the environments to help visualise what the agent see, examples modes are “human”, “rgb_array”, “ansi” for text."""
@@ -342,6 +349,38 @@ class Alfred2DEnv(LangSuiteEnv):
                         for child in children:
                             objs[child.id] = child
         return objs
+    
+    def get_receptacle_objects(self):
+        objs = {}
+        for id, obj in self.world.objects.items():
+            if (
+                "receptacle" in obj.props
+                and obj.props["receptacle"]
+            ):
+                objs[id] = obj
+        return objs
+    
+    def get_observed_receptacle_observation(self, agent):
+        objs = {}
+        observation = "You are facing "
+        for id, obj in self.world.objects.items():
+            if (
+                "receptacle" in obj.props
+                and obj.props["receptacle"]
+                and agent.can_observe(obj.geometry)
+            ):
+                objs[id] = obj
+
+        if len(objs) == 0:
+            observation += "nothing."
+        else:
+            for obj_id in objs:
+                observation += (
+                    "a " + self.object_id2name[obj_id] + ", "
+                )
+        if observation.strip().endswith(", "):
+            observation = observation[:-1] + "."
+        return observation
 
     def get_openned_object_observation(self, object_id):
         children = []
@@ -482,9 +521,66 @@ class Alfred2DEnv(LangSuiteEnv):
                 objs[id] = obj
         return objs
 
+    def get_obj_description(self, obj):
+        children = []
+        description = ""
+        obj_type = self.object_id2name[obj.id]
+        temperature = ""
+        is_dirty = ""
+        if "temperature" in obj.props and obj.props["temperature"] == "Cold":
+            temperature = "cool"
+        elif "temperature" in obj.props and obj.props["temperature"] == "Hot":
+            temperature = "hot"
+        if "isDirty" in obj.props and obj.props["isDirty"]:
+            is_dirty = "dirty"
+        elif "isDirty" in obj.props and not obj.props["isDirty"]:
+            is_dirty = "clean"
+        if "receptacle" in obj.props and obj.props["receptacle"]:
+            if obj.props["openable"] and not obj.props["isOpen"]:
+                description = obj_type + " is closed. You can check it by opening it."
+            elif len(obj.children) > 0:
+                for child in obj.children.keys():
+                    children.append(self.object_id2name[child])
+                description = "In it, you see a " + ", a ".join(children) + "."
+            elif len(obj.children) == 0:
+                description = "In it, you see nothing."
+        else:
+            if temperature != "" or is_dirty != "":
+                if temperature == "":
+                    description = obj_type + " is " + is_dirty + "."
+                elif is_dirty == "":
+                    description = obj_type + " is " + temperature + "."
+                else:
+                    description = obj_type + " is " + temperature + " and " + is_dirty + "."
+            elif "toggleable" in obj.props and obj.props["isToggled"]:
+                description = obj_type + " is on."
+            elif "toggleable" in obj.props and not obj.props["isToggled"]:
+                description = obj_type + " is off."
+            elif "sliceable" in obj.props and obj.props["sliceable"]:
+                description = "This is a sliceable " + obj_type + "."
+            else:
+                description = "There's nothing special about " + obj_type + "."
+        return description
+    
+    def get_look_around_observation(self, agent):
+        observed_objects = self.get_receptacle_objects()
+        observation = "You are in the middle of a room. Looking quickly around you, you see "
+        
+        if len(observed_objects) == 0:
+            observation += "nothing."
+        else:
+            for obj_id in observed_objects:
+                observation += (
+                    "a " + self.object_id2name[obj_id] + ", "
+                )
+        if observation.strip().endswith(", "):
+            observation = observation[:-1] + "."
+        return observation
+
     def get_observation(self, agent):
         # self.render_matplotlib()
         observed_objects = self.get_observed_objects(agent)
+        
         large_objs = []
         middle_objs = []
         left_objs = []
@@ -581,7 +677,7 @@ class Alfred2DEnv(LangSuiteEnv):
                         )
                     else:
                         left_observation += (
-                            "an opened" + self.object_id2name[obj.id] + ", "
+                            "an opened " + self.object_id2name[obj.id] + ", "
                         )
                         left_observation += "it's empty; "
                 else:

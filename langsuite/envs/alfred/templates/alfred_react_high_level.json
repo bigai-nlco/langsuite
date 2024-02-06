@@ -1,0 +1,302 @@
+{
+    "intro": {
+        "default": [
+            "You are an autonomous intelligent agent tasked with navigating a vitual home. You will be given a household task. These tasks will be accomplished through the use of specific actions you can issue.\nTo be successful, it is very important to follow the following rules:\n1. You should only issue ONE action or ONE thought that is valid given the current observation\n2. When you issue a action, and ONLY ONE action is enough, and then wait for your feedback.\n3. Generate the action in the correct format starting with \"Act:\". For example, \"Act: pick_up [cup_0]\".\n4. State your thought or think process starting with \"Thought:\"\n5. You can ONLY operate the object within your view distance.\n6. If got action failed feedback, try to take other actions to proceed the task. \n7. Issue stop action when you think you have achieved the objective, Act: stop[]. Don't generate anything after stop.\n\nHere are some examples:\n{example}\n\nRespond YES if you can play this game."
+        ],
+        "default1":["\n\nHere's the information you'll have: \nTask: This is the task you are trying to accomplish.\nObs: These are the objects you can see.\nInventory: These are the objects you are holding.\nFeedback: Whether the action is succeed or not and why is it.\n\nAt each step, you can choose to think your plan or execute an action from one of the following: `look`: it means you look the receptacle objects infront of you.\n`goto [object_name]`: it means you goto an object you see.\n`pick_up [object_name]`: Use this action to pick_up a pick_upable and visible object within your manipulation distance.\n`drop [object_name]`: it means you places the object in inventory at the place just in front of it.\n`open [object_name]`: it means you open an openable and visible object within your manipulation distance.\n`close [object_name]`: it means you close a closeable and visible object.\n`toggle_on [object_name]`: it means you toggle a toggleable and visible object on.\n`toggle_off [object_name]`: it means you toggle a toggleable and visible object off.\n`slice [object_name]`: it means you slice a sliceable and visible object.\n`put [object_name, receptacle_name]`: it means you places the object in inventory into/onto the receptacle.\n`heat [object_name, heater_name]`: it means you heat the object in inventory with the heater like toaster stove burner or microwave.\n`cool [object_name, cooler_name]`: it means you cool the object in inventory with the cooler like fridge.\n`clean [object_name, sink_name]`: it means you clean the object in inventory with the receptacle like basin, sink or bathtub.\n`stop [answer]`: Issue this action when you believe the task is complete. If you believe the task is impossible to complete, provide the answer as \"N/A\" in the bracket.\n"]
+    },
+    "example": {
+        "default": [
+            "Task: put a clean lettuce in diningtable.\nObs: You can see nothing ahead.\n> Thought: To solve the task, I need to find and take a lettuce, then clean it with sinkbasin, then put it in diningtable.\nOK.\n> Act: turn_left"
+        ]
+    },
+    "InvalidAction": {
+        "failure.actionNotFound": [
+            "Feedback: Action failed. There is no valid action in your response. Please generate action in a correct format. You must put action arguments in brackets. Choose one action from the list: `goto [object_name]`, `pick_up [object_name]`, `drop`, `open [object_name]`, `close [object_name]`, `toggle_on [object_name]`, `toggle_off [object_name]`, `slice [object_name]`, `put [object_name, receptacle_name]`, `heat [object_name, heater_name]`, `cool [object_name, cooler_name]`, `clean [object_name, sink_name]` ."
+        ],
+        "failure.multipleActions": [
+            "Feedback: Action failed. I found multiple actions in your response, please only respond with one action at a time. For example, \"Act: goto [object_name]\""
+        ],
+        "failure.selfFeedback": [
+            "Feedback: Action failed. Do not imagine feedback in your response, only respond with one action and wait for system's feedback. For example, \"Act: goto [object_name]\""
+        ],
+        "failure.invalidObjectName": [
+            "Feedback: Action failed. There is no the object \"{object}\" in your view space. Please operate the object in sight."
+        ],
+        "failure.objectNotProvide": [
+            "Feedback: Action failed. The object is not provided or not in sight. You can only manipulate the object in sight. You must put the object_name in brackets. For example,`goto [object_name]`,  `pick_up [object_name]`, `drop`, `open [object_name]`, `close [object_name]`, `toggle_on [object_name]`, `toggle_off [object_name]`, `slice [object_name]`, `put [object_name, receptacle_name]` `heat [object_name, heater_name]`, `cool [object_name, cooler_name]`, `clean [object_name, sink_name]` ."
+        ],
+        "failure.objectNotExist": [
+            "Feedback: Action failed. There is no object \"{object}\" existing. Please operate the object in sight."
+        ],
+        "failure.objectNotInView": [
+            "Feedback: Action failed. You can not see {object} in your view space."
+        ],
+        "failure.objectNotInMainpulation": [
+            "Feedback: Action failed. Object {object} is not in your manipulation distance ({manipulation_distance} step)."
+        ]
+    },
+    "Start": {
+        "default": [
+            "Task: {task_description}\nObs: {observation}\nWhat is your next step? Let's think before act."
+        ]
+    },
+    "Look": {
+        "default": [
+            "Feedback: Action succeeded. {observation}"
+        ]
+    },
+    "Stop": {
+        "default": [
+            "You stopped the game."
+        ],
+        "success": [
+            "[SUCCESS] You have completed the task. Congratulations!"
+        ],
+        "failure": [
+            "[FAIL] You failed to complete the task."
+        ]
+    },
+    "MoveAhead": {
+        "success.default": [
+            "Feedback: Action succeeded. Moved forward by 1 step.\nObs: {observation}"
+        ],
+        "failure.isBlocked": [
+            "Feedback: Action failed. Can not move ahead, because there is an obstacle ahead.\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed.\nObs: {observation}"
+        ],
+        "default": [
+            "Feedback: Action succeeded.\nObs: {observation}"
+        ]
+    },
+    "TurnLeft": {
+        "success.default": [
+            "Feedback: Action succeeded. Turn left by '{degree}' degrees.\nObs: {observation}"
+        ]
+    },
+    "TurnRight": {
+        "success.default": [
+            "Feedback: Action succeeded. Turn right by '{degree}' degrees.\nObs: {observation}"
+        ]
+    },
+    "PickUp": {
+        "success.default": [
+            "Feedback: Action succeeded. You picked {object} up.\nInventory: {inventory}."
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to pick up {object}."
+        ],
+        "failure.notInView": [
+            "Feedback: Action failed. Object {object} is not in view space."
+        ],
+        "failure.intentoryFilled": [
+            "Feedback: Action failed. You have already held enough object(s), drop one before you pick up another one.\nObs: {observation} "
+        ],
+        "failure.objectNotProvide": [
+            "Feedback: Action failed. Please generate the action in the correct format. You must put object name in brackets. For example, `pick_up [cup]`."
+        ],
+        "failure.notPickupable": [
+            "Feedback: Action failed. Object {object} is not pickable."
+        ]
+    },
+    "Drop": {
+        "success.default": [
+            "Feedback: Action succeeded. You dropped {object}.\nInventory: {inventory}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to drop {object}."
+        ],
+        "failure.emptyInventory": [
+            "Feedback: Action failed. Inventory is empty, nothing to drop."
+        ],
+        "failure.objectNotInInventory": [
+            "Feedback: Action failed. Object {object} is not in your inventory.\nInventory: {inventory}."
+        ]
+    },
+    "Open": {
+        "success.default": [
+            "Feedback: Action succeeded. You opened {object}.\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to open {object}."
+        ],
+        "failure.notInView": [
+            "Feedback: Action failed. Object {object} is not in view space."
+        ],
+        "failure.notOpenable": [
+            "Feedback: Action failed. Object {object} is not openable."
+        ],
+        "failure.objectNotProvide": [
+            "Feedback: Action failed. You did not provide an object or the object name is wrong. Please operate the object in sight."
+        ]
+    },
+    "Close": {
+        "success.default": [
+            "Feedback: Action succeeded. You closed {object}."
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to close {object}."
+        ],
+        "failure.notInView": [
+            "Feedback: Action failed. Object {object} is not in view space."
+        ],
+        "failure.notCloseable": [
+            "Feedback: Action failed. Object {object} is not Closeable."
+        ]
+    },
+    "ToggleOn": {
+        "success.default": [
+            "Feedback: Action succeeded. You toggled {object} on.\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to toggle {object} on."
+        ],
+        "failure.notToggleable": [
+            "Feedback: Action failed. Object {object} is not toggleable."
+        ]
+    },
+    "ToggleOff": {
+        "success.default": [
+            "Feedback: Action succeeded. You toggled {object} off.\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to toggle {object} off."
+        ],
+        "failure.notInView": [
+            "Feedback: Action failed. Object {object} is not in view space."
+        ],
+        "failure.notCloseable": [
+            "Feedback: Action failed. Object {object} is not toggleable."
+        ]
+    },
+    "Slice": {
+        "success.default": [
+            "Feedback: Action succeeded. You sliced {object}.\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to slice {object}."
+        ],
+        "failure.objectIsSliced": [
+            "Feedback: Action failed. Object {object} is already sliced.\nObs: {observation}"
+        ],
+        "failure.notInView": [
+            "Feedback: Action failed. Object {object} is not in view space."
+        ],
+        "failure.notSliceable": [
+            "Feedback: Action failed. Object {object} is not sliceable."
+        ]
+    },
+    "Put":{
+        "success.default": [
+            "Feedback: Action succeeded. You put {object} into/onto {receptacle}.\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to place."
+        ],
+        "failure.notInView": [
+            "Feedback: Action failed. Receptacle {receptacle} is not in view space."
+        ],
+        "failure.inventoryFilled": [
+            "Feedback: Action failed. You have already held enough object(s), drop one before you pick up another one. "
+        ],
+        "failure.emptyInventory": [
+            "Feedback: Action failed. Inventory is empty, nothing to drop."
+        ],
+        "failure.NotInInventory": [
+            "Feedback: Action failed. Object {object} is not in your inventory.\nInventory: {inventory}."
+        ]
+    },
+    "Cool":{
+        "success.default": [
+            "Feedback: Action succeeded. You cool {object} with {receptacle}.\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to cool object."
+        ],
+        "failure.notInView": [
+            "Feedback: Action failed. Receptacle {receptacle} is not in view space."
+        ],
+        "failure.notCooler": [
+            "Feedback: Action failed. Receptacle {receptacle} is not a cooler."
+        ],
+        "failure.inventoryFilled": [
+            "Feedback: Action failed. You have already held enough object(s), drop one before you pick up another one. "
+        ],
+        "failure.emptyInventory": [
+            "Feedback: Action failed. Inventory is empty, nothing to drop."
+        ],
+        "failure.NotInInventory": [
+            "Feedback: Action failed. Object {object} is not in your inventory.\nInventory: {inventory}."
+        ]
+    },
+    "Heat":{
+        "success.default": [
+            "Feedback: Action succeeded. You heat {object} with {receptacle}.\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to heat object."
+        ],
+        "failure.notInView": [
+            "Feedback: Action failed. Receptacle {receptacle} is not in view space."
+        ],
+        "failure.notHeater": [
+            "Feedback: Action failed. Receptacle {receptacle} is not a heater."
+        ],
+        "failure.inventoryFilled": [
+            "Feedback: Action failed. You have already held enough object(s), drop one before you pick up another one. "
+        ],
+        "failure.emptyInventory": [
+            "Feedback: Action failed. Inventory is empty, nothing to drop."
+        ],
+        "failure.NotInInventory": [
+            "Feedback: Action failed. Object {object} is not in your inventory.\nInventory: {inventory}."
+        ]
+    },
+    "Clean":{
+        "success.default": [
+            "Feedback: Action succeeded. You clean {object} with {receptacle}.\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to clean object."
+        ],
+        "failure.notInView": [
+            "Feedback: Action failed. Receptacle {receptacle} is not in view space."
+        ],
+        "failure.notBasin": [
+            "Feedback: Action failed. Receptacle {receptacle} is not a Basin."
+        ],
+        "failure.inventoryFilled": [
+            "Feedback: Action failed. You have already held enough object(s), drop one before you pick up another one. "
+        ],
+        "failure.emptyInventory": [
+            "Feedback: Action failed. Inventory is empty, nothing to drop."
+        ],
+        "failure.NotInInventory": [
+            "Feedback: Action failed. Object {object} is not in your inventory.\nInventory: {inventory}."
+        ]
+    },
+    "Inspect":{
+        "success.default": [
+            "Feedback: Action succeeded. You inspect {object}.\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to inspect {object}."
+        ]    
+    },
+    "GoTo":{
+        "success.default": [
+            "Feedback: Action succeeded. You are at {object}. \nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to goto {object}."
+        ],
+
+        "failure.alreadyAtTarget": [
+            "Feedback: Action failed. You are already near target object {object} ."
+        ]
+       
+    }
+
+}

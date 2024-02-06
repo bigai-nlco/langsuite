@@ -4,6 +4,12 @@ from __future__ import annotations
 
 import json
 import re
+
+# -*- coding: utf-8 -*-
+import json
+import random
+import re
+import sys
 from copy import deepcopy
 from math import floor
 from pathlib import Path
@@ -21,11 +27,23 @@ __all__ = [
 ]
 
 AlfredPath = Path(__file__).parent.parent.parent.parent
-
+with open("langsuite/envs/alfred/prompt_example/prompt_react_self_loc.json", 'r') as f:
+    examples = json.load(f)
 
 def load_data(data_dir, stage):
+    # memory_path = "/home/wangmengmeng/workplace/gitlab/sim2text/scripts/test/alfred_test/memory_high_loc_50_1.txt"
     tasks = []
+    # task_types = [
+    #     "look_at_obj_in_light",
+    #     "pick_and_place_simple",
+    #     "pick_clean_then_place_in_recep",
+    #     "pick_cool_then_place_in_recep",
+    #     "pick_heat_then_place_in_recep",
+    #     "pick_two_obj_and_place",
+    # ]
     dev_path = Path(data_dir, stage + ".json")
+    # with open(memory_path, "r", encoding='utf-8') as f:
+    #     memory = json.load(f)
     with open(
         dev_path,
         "r",
@@ -33,15 +51,19 @@ def load_data(data_dir, stage):
     ) as data_f:
         dev_data = json.load(data_f)
     # dev_data = {"a": [1] * 11}
-    for task_type, task_paths in dev_data.items():
+    for _, task_paths in dev_data.items():
         for task_path in task_paths:
+            # task_path = "json_2.1.0/valid_seen/pick_clean_then_place_in_recep-SoapBar-None-BathtubBasin-423/trial_T20190908_064808_086925/traj_data_converted.json"
+            task_description = ""
             with open(
                 Path(data_dir).joinpath(task_path),
                 "r",
                 encoding="utf-8",
             ) as scene_f:
                 task_json = json.load(scene_f)
-
+                task_type = task_json["task_type"]
+                # if task_type not in task_types:
+                #     continue
                 scene = task_json["scene"]
                 agent_init = scene["init_action"]
                 agent_data = {
@@ -55,17 +77,27 @@ def load_data(data_dir, stage):
 
                 turk_annotations = task_json["turk_annotations"]
                 task_definition = turk_annotations["anns"][0]["task_desc"]
+                # memory_key = task_path.split("/")[-2]
+                # if memory_key in memory:
+                #     task_description += '\n\nYour memory for the task below:'
+                #     task_description += memory[memory_key]
+                #     task_description += f"\nHere is the task:\n{task_definition}"
+                # else:
+                #     task_description = task_definition
+                task_description = task_definition
                 target_status = task_json["pddl_params"]
-                task_type = task_json["task_type"]
+                
+                # example = examples[task_type+"_0"]+examples[task_type+"_1"]+examples["slice"]
                 tasks.append(
                     dict(
                         name=f"AlfredTask:Alfred2DEnv:{id}",
                         data=dict(world_data=scene, agent_data=agent_data),
-                        task_description=task_definition,
+                        task_description=task_description,
                         expert_actions=expert_actions,
                         task_path=task_path,
                         target_status=target_status,
                         task_type=task_type,
+                        # example=example
                     )
                 )
     return tasks
@@ -81,7 +113,7 @@ class AlfredTask(BaseTask):
         super().__init__(env=env, template=template, name=name, **kwargs)
         self._is_successful: bool = False
         self._feedback_builder: str = TemplateBuilder(template_json=template)
-        self._task_guidance = self.task_guidance()
+        # self._task_guidance = self.task_guidance()
         self._history = []
         self._reward_fns = []
         self._pre_info_dict = None
@@ -91,18 +123,23 @@ class AlfredTask(BaseTask):
         self._success_criteria = [
             lambda curr_info: self.is_task_conditions_met(curr_info)
         ]
-        self.stop_criterions = [lambda _: self._timesteps >= 100]
+        self.stop_criterions = [lambda _: self._timesteps >= 60]
         self.task_spec = None
         self.target_status = kwargs.get("target_status", None)
         self.task_type = kwargs.get("task_type", None)
-
+        self.example = kwargs.get("example", None)
     @classmethod
     def create(cls, task_cfg, task_data=None):
         if not task_data:
-            path = "./data/alfred/alfred_test"
-            tasks = load_data(path, "test")
-            task_data = tasks[0]
+            # tasks = load_data(Path(AlfredPath, "data", "alfred"), "train")
+            # task_data = random.choice(tasks)
+            path = "./data/alfred"
+            tasks = load_data(path, "dev")
 
+            index = random.randint(0, len(tasks) - 1)
+            task_data = tasks[index]
+            # print("index", index)
+        # logger.emit(task_data["task_path"])
         env = Alfred2DEnv.create(task_cfg["env"])
         world_confg = deepcopy(task_cfg["world"])
         if "world_data" in task_data.get("data"):
@@ -135,6 +172,8 @@ class AlfredTask(BaseTask):
             name=task_cfg.get("name", task_cfg["task"]),
             target_status=task_data["target_status"],
             task_type=task_data["task_type"],
+            # example=task_data["example"],
+            example=None,
         )
         task.task_spec = task_data.get("task_description")
         return task
@@ -142,17 +181,20 @@ class AlfredTask(BaseTask):
     def task_guidance(self):
         agent_id = list(self.env.agents.keys())[0]
         agent = self.env.agents[agent_id]
+        if self.example is None:
+            self.example = self._feedback_builder.build("example")
+        
         return self._feedback_builder.build(
             "intro",
             max_view_steps=agent.max_view_distance / agent.step_size,
             degree=floor(agent.aov / 2),
             max_inventory=agent.inventory_capacity,
             max_manipulation_steps=agent.max_manipulate_distance / agent.step_size,
-            example=self._feedback_builder.build("example"),
+            example=self.example,
         )
 
     def start(self, render=True):
-        # self.env.reset()
+        self.env.reset()
         if render:
             prompt = self.task_guidance()
             logger.emit({"role": "system", "content": prompt})
@@ -225,6 +267,9 @@ class AlfredTask(BaseTask):
                             {"role": "system", "content": agnt_info["feedback"]}
                         )
                     action_dict = {"prompt": agnt_info["feedback"]}
+                    # if "fail" in agnt_info["feedback"]:
+                    #     self.env.render()
+                    #     sys.exit()
 
             if self._determine_stop(info):
                 logger.emit(
@@ -306,6 +351,7 @@ class AlfredTask(BaseTask):
             found = 0
             for p in pickupables:
                 for r in receptacles:
+                    # print("eval:", r.children)
                     if r.get_child(p.id) is not None:
                         found += 1
             if found > 0:

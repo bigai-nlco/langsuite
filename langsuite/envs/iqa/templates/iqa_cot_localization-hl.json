@@ -1,0 +1,66 @@
+{
+    "intro": {
+        "default": [
+            "Imagine you are a robot that can move and see and open objects in a 2D grid kitchen environment.\nAt the begining of this task I will give you a question about the environment and all the objects in front of you within your view size:\n\t1. Question:You need to get the information of the environment and answer the question.\n\t2. Obs:Visible objects list \nAt each step you get some information from me, and you respond one robot thought and one robot action each time, nothing else, and then wait for feedback.\nYou will get these information from me, remember these information are all from me, you can only generate Robot action:\n\t1.Obs: Visible objects list\n \t2.Feedback:True or False, indicating the action is successful or not and why not.\nWhat you can do:\n\twait for me to give you next round feedback including Scene and Successful action and something else.\n\tRemember carefully, after you output robot thought and robot action, you should wait for me to give you feedback.\nRobot thought:\n\tthought [thought info]:it means your thought about how to get the answer. \nRobot action:\n\tgoto [object_name]: it means you go to the object you see.\n\topen [object_name]: it means robot open an openable object,open [fridge_0] means open fridge_0, and remerber do not issue action open if you have opened the object.\n\tanswer [answer_info]: do this to answer the question. \nGenerate the thought and open and answer action in the correct format. Always put the action like thought [Found it] or open [fridge_0] or answer [True].\nRemember carefully,you generate thought and action,then wait for my feedback.And there is a space after the action name.\n\nNow i will give you 3 examples:\n\n1.Question: Is there a mug in the room?\nObs: You are in the middle of a room. Looking quickly around you, you see a Bed_1, a Countertop_1, a Cabinet_1.\n>thought [I explored nowhere in the room. Mugs are morelikely to be found on countertop, next step I will start from it.]\n>goto [Countertop_1]\nFeedback: Action succeeded.\nObs: In front of you, You see a Countertop_1, a Mug_1, a Spoon_1,a Plate_1.\n>thought [I have seen a mug. Found it!]\n>answer [True]\n\n2.Question: I think there is a potato in the fridge. Is that correct?\nObs: Obs: You are in the middle of a room. Looking quickly around you, you see a Cabinet_2, a Countertop_1, a Cabinet_1, a Microwave_1, a Fridge_1.\n>thought [I explored nowhere in the room, I have seen a fridge, next step I will go to it.]\n>goto [Fridge_1]\nFeedback: Action succeeded.\nObs: In front of you, You see a Fridge_0; On your left, you see a winebottle_0.\n>thought [I am facing a fridge, next step I need to check in this fridge?]\n>open [Fridge_1]\nFeedback: Action succeeded.\nObs: In/on it you You see mug_1,potato_0 in/on it.\n>thought [I have explored the fridge, Found it!]\n>answer [True]\n\n3.Question: Count the number of apples in this room.\nObs: Obs: You are in the middle of a room. Looking quickly around you, you see a Bed_1, a Countertop_1, a Cabinet_1.\n>thought [I have explored nowhere in the room, I should exlplore all the objects I have seen to find all the apples in the room.]\n>goto [Countertop_1]\nFeedback: Action succeeded.\nObs: In front of you, You see a bowl_0; a stool_0; On your left, you see a butterknife_0; a coffeemachine_0;\n>thought [zero, I have explored a countertop, next step I will look other palces.]\n>goto [Cabinet_1]\nFeedback: Action succeed.\nObs: In front of you, You see a bowl_0; a cabinet_1; On your right, you see a butterknife_0; a coffeemachine_0;\n>thought [zero, I have explored a countertop and facing a cabinet, next step I need to check the cabinet.]\n>open [Cabinet_1]\nFeedback: Action succeeded.\nObs: You opened Cabinet_1, it is empty. \n>thought [Zero, I have explored a countertop and a cabinet. next step I will look at other palces]\n>goto [Bed_1]\nFeedback: In front of you, you see a bed_1, a pillow_2, a apple_1.\n\n>thought [One apple on the bed, I have explored a countertop, a cabinet and a Bed. I have explored everywhere.]\n>answer [1]\n\nRespond YES if you can play this game."
+        ]
+    },
+    "InvalidAction": {
+        "default": [
+            "Invalid action {action}"
+        ],
+        "failure.objectNotInView": [
+            "Feedback: Action failed. Object {object} is not in view space.\nObs: {observation}"
+        ],
+        "failure.notOpenable": [
+            "Feedback: Action failed. Object {object} is not openable.\nObs: {observation}"
+        ],
+        "failure.objectNotProvide": [
+            "Feedback: Action failed. You did not provide an object or the object name is wrong. Please operate the object in sight.\nObs: {observation}"
+        ]
+    },"Stop": {
+        "success": [
+            "Your are right!"
+        ],
+        "failure": [
+            "Your are wrong!"
+        ]
+    },
+    "IqaStart": {
+        "default": [
+            "\nQuestion: {task}\nObs: {object_str}  "
+        ]
+    },
+    "Open": {
+        "success.default": [
+            "Feedback: Action succeeded.\nObs:{observation}"
+        ],
+        "failure.notInView": [
+            "Feedback: Action failed.\n Object {object} is not in view space. Now all the objects you can see are:{observation}. What's your next action?"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to open {object}.\nObs: {observation}"
+        ],
+        "failure.objectNotInView": [
+            "Feedback: Action failed. Object {object} is not in view space.\nObs: {observation}"
+        ],
+        "failure.notOpenable": [
+            "Feedback: Action failed. Object {object} is not openable.\nObs: {observation}"
+        ],
+        "failure.objectNotProvide": [
+            "Feedback: Action failed. You did not provide an object or the object name is wrong. Please operate the object in sight.\nObs: {observation}"
+        ]
+    },
+    "GoTo":{
+        "success.default": [
+            "Feedback: Action succeeded. You are at {object}. \nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to goto {object}."
+        ],
+
+        "failure.alreadyAtTarget": [
+            "Feedback: Action failed. You are already near target object {object} ."
+        ]
+       
+    }
+}
