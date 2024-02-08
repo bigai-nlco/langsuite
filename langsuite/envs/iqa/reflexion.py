@@ -69,11 +69,11 @@ def send_request(kw):
         return 'An error occurred while sending the request'
     
     
-folder_name = "/home/wtding/langsuite-dev/iqa_data_folder/CoT-high-level-0/console-logs/"
-memory_path = "/home/wtding/langsuite-dev/iqa_data_folder/Reflexion-high-level-0/memory.txt"
-#folder_name = "/home/wtding/langsuite-dev/babyai_gpt3.5_react_emmem/"
-#memory_path = "/home/wtding/langsuite-dev/babyai_gpt3.5_reflexion_emmem/save/memory.txt"
-skip_path = "/home/wtding/langsuite-dev/langsuite/envs/iqa/reflexion_history.txt"
+folder_name = "./iqa_data_folder/CoT-high-level-0/console-logs/"
+memory_path = "./iqa_data_folder/Reflexion-high-level-0/memory.txt"
+#folder_name = "./babyai_gpt3.5_react_emmem/"
+#memory_path = "./babyai_gpt3.5_reflexion_emmem/save/memory.txt"
+skip_path = "./langsuite/envs/iqa/reflexion_history.txt"
 count = 0
 files = os.listdir(folder_name)
 skip_file = open(skip_path, 'r+')

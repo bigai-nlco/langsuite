@@ -1,5 +1,5 @@
 task: AlfredTask:Alfred2DEnv
-template: /home/wangmengmeng/workplace/gitlab/sim2text/langsuite/envs/alfred/templates/alfred_self_localization.json
+template: ./langsuite/envs/alfred/templates/alfred_self_localization.json
 
 env:
   type: Alfred2DEnv

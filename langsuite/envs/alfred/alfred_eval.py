@@ -24,7 +24,7 @@ def eval(folder_name):
     true_number = 0
     conditioned_success = 0.0
     result = {}
-    # p = "/home/wangmengmeng/workplace/gitlab/sim2text/scripts/test/alfred_test/gpt3.5-loc/"
+    # p = "./scripts/test/alfred_test/gpt3.5-loc/"
     # print(len(os.listdir(p)))
     for fn in os.listdir(folder_name):
         idx += 1

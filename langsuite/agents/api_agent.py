@@ -3,8 +3,8 @@
 
 # -*- coding: utf-8 -*-
 
-import os
 from __future__ import annotations
+import os
 
 from copy import deepcopy
 

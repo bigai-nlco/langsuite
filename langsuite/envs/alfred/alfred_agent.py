@@ -19,88 +19,10 @@ from langsuite.llms import create_llm, create_llm_prompts, process_llm_results
 from langsuite.llms.output_parsers import RegexOutputParser
 from langsuite.shapes import Vector2D
 from langsuite.utils import math_utils
+from langsuite.utils.io_utils import LLM_gpt35
 from langsuite.utils.logging import logger
 from langsuite.utils.string_utils import camelcase
 import datetime
-# def llm_gpt_35(messages, max_gen=100):
-#     for m in messages:
-#         if "success" in m:
-#             del m["success"]
-#     rsp = openai.ChatCompletion.create(
-#         model="gpt-3.5-turbo-16k",
-#         messages=messages,
-#         temperature=0.0,
-#         top_p=1,
-#         max_tokens=max_gen,
-#         frequency_penalty=0,
-#         presence_penalty=0,
-#     )
-#     response = (
-#         rsp["choices"][0]["message"]["content"]
-#         .replace("\n ", " ")
-#         .strip(" ")
-#         .strip('"')
-#     )
-#     return response
-
-def llm_gpt_35(messages, max_gen=100):
-    # 替换为自己的KEY
-    messages = [{"role": message["role"], "content": message["content"]} for message in messages]
-    api_key = ""
-    try:
-        api_url = 'https://one.aiskt.com/v1/chat/completions'
-        # 设置请求头部，包括 API 密钥
-        headers = {
-            'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json'
-        }
-        # 准备请求的数据
-        payload = {
-            'model': "gpt-3.5-turbo-16k",
-            'messages': messages,
-            'temperature': 0
-        }
-        # 发送 POST 请求
-        response = requests.post(api_url, headers=headers, data=json.dumps(payload))
-        # print(response)
-        # 检查响应状态
-        if response.status_code == 200:
-            # 解析响应并提取需要的信息
-            data = response.json()
-            return data['choices'][0]['message']['content']
-        else:
-            return f'Error: Received status code {response.status_code}'
-    except Exception as e:
-        return 'An error occurred while sending the request'
-    # count = 0
-    # while True:
-    #     if count > 3:
-    #         break
-    #     try:
-    #         rsp = openai.ChatCompletion.create(
-    #             model="gpt-3.5-turbo-16k",
-    #             messages=messages,
-    #             temperature=0.0,
-    #             top_p=1,
-    #             max_tokens=max_gen,
-    #             frequency_penalty=0,
-    #             presence_penalty=0,
-    #         )
-    #         print(rsp)
-    #         response = (
-    #             rsp["choices"][0]["message"]["content"]
-    #             .replace("\n ", " ")
-    #             .strip(" ")
-    #             .strip('"')
-    #         )
-    #         return response
-    #     except Exception as e:
-    #         time.sleep(2)
-    #         print(e)
-    #         count += 1
-    #         continue
-
-    # return ""
 
 
 @AGENT_REGISTRY.register()
@@ -373,7 +295,7 @@ class AlfredAgent(SimpleAgent):
         # response = self.llm(messages=create_llm_prompts(messages=prompts))
         # print("*****",prompt)
         # print(prompts)
-        response = llm_gpt_35(prompts)
+        response = LLM_gpt35.fetch(prompts)
         logger.info(response)
         return process_llm_results(response)
 

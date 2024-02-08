@@ -17,7 +17,7 @@ world:
 
 agents:
   - type: IqaAgent
-    position: 'random'
+#    position: 'random'
     inventory_capacity: 1
     focal_length: 10
     max_manipulate_distance: 5

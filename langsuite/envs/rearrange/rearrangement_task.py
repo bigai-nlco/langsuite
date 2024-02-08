@@ -8,6 +8,8 @@ from copy import deepcopy
 from math import floor
 from pathlib import Path
 
+import requests
+
 from langsuite.actions.base_action import ActionFeedback
 from langsuite.envs.rearrange.rearrange_env import Rearrange2DEnv
 from langsuite.task import TASK_REGISTRY, BaseTask
@@ -20,7 +22,6 @@ __all__ = [
 
 RearrangePath = Path(__file__).parent.parent.parent.parent
 
-
 def load_data(data_dir, stage):
     def get_obj_id(world_data, obj_name):
         for object in world_data["objects"]:
@@ -30,6 +31,7 @@ def load_data(data_dir, stage):
 
     with open(
         Path(data_dir, "data", "rearrange", stage + ".json"),
+#        Path(data_dir, "data", "rearrange", stage + ".json"),
         "r",
         encoding="utf-8",
     ) as scene_f:
@@ -132,13 +134,20 @@ class RearrangementTask(BaseTask):
     def create(cls, task_cfg, task_data=None):
         if not task_data:
             # task_data = random.choice(load_data(RearrangePath))
-            task_data = load_data(RearrangePath, "train")
-            index = random.randint(0, len(task_data) - 1)
-            task_data = task_data[1337]
-            print("index", index)
+            task_data = random.choice(load_data(RearrangePath, "test"))
+            # task_data = load_data(RearrangePath, "train")
+            # index = random.randint(0, len(task_data) - 1)
+            # task_data = task_data[1337]
+            # print("index", index)
             # logger.info("Task index is " + str(index))
 
         env = Rearrange2DEnv.create(task_cfg["env"])
+
+        #HACK XXX
+        if 'log_file' in task_data:
+            setattr(env, 'task_log_file_name', task_data['log_file'])
+
+
         world_confg = deepcopy(task_cfg["world"])
         if "world_data" in task_data.get("data"):
             world_confg.update({"data": task_data["data"]["world_data"]})

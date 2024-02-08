@@ -67,16 +67,16 @@ def main():
     ## 设置model 改变存储位置
     model = "temperature0"
     ## 设置数据路径
-    data_path = "/home/wangmengmeng/workplace/data/alfred/alfred_test"
+    data_path = "./data/alfred/alfred_test"
 
     ## conig path
-    config_path = "/home/wangmengmeng/workplace/gitlab/sim2text/configs/alfred_cfg.yml"
+    config_path = "./configs/alfred_cfg.yml"
     logger.set_log_file(
         f"alfred_{stage}/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log')}"
     )
     logger.setLevel("ERROR")
     index = 0
-    # memory_path = "/home/wangmengmeng/workplace/gitlab/sim2text/scripts/test/alfred_test/memory_1.txt"
+    # memory_path = "./scripts/test/alfred_test/memory_1.txt"
 
     tasks_data = load_data(data_path, stage)
     # print(len(tasks_data))

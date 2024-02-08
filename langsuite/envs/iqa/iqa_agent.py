@@ -13,6 +13,7 @@ from langsuite.agents.base_agent import AGENT_REGISTRY
 from langsuite.agents.simple_agent import SimpleAgent
 from langsuite.llms import create_llm, create_llm_prompts, process_llm_results
 from langsuite.utils import logging
+from langsuite.utils.io_utils import LLM_gpt35
 from langsuite.utils.logging import logger
 
 
@@ -32,40 +33,6 @@ def parse_method(response, method):
     for match in matches:
         return match
     return ""
-
-def llm_gpt_35(messages, max_gen=100):
-    # 替换为自己的KEY
-    messages = [{"role": message["role"], "content": message["content"]} for message in messages]
-    # print("messages is !!! ", messages)
-    api_key = ""
-    try:
-        api_url = 'https://one.aiskt.com/v1/chat/completions'
-        # 设置请求头部，包括 API 密钥
-        headers = {
-            'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json'
-        }
-        # 准备请求的数据
-        payload = {
-            'model': "gpt-3.5-turbo-16k",
-            'messages': messages,
-            # 'temperature': 1.0
-        }
-        # 发送 POST 请求
-        response = requests.post(api_url, headers=headers, data=json.dumps(payload))
-        # 检查响应状态
-        if response.status_code == 200:
-            # 解析响应并提取需要的信息
-            data = response.json()
-#            print("----***")
-#            print(data)
-            return data['choices'][0]['message']['content']
-        else:
-            return f'Error: Received status code {response.status_code}'
-    except Exception as e:
-        return 'An error occurred while sending the request'
-
-
 
 @AGENT_REGISTRY.register()
 class IqaAgent(SimpleAgent):
@@ -233,7 +200,7 @@ class IqaAgent(SimpleAgent):
         prompts.append({"role": "system", "content": str(prompt)})
         self.chat_history.append({"role": "system", "content": str(prompt)})
         # response = self.llm(messages=create_llm_prompts(messages=prompts))
-        response = llm_gpt_35(prompts)
+        response = LLM_gpt35.fetch(prompts)
         self.chat_history.append(
                 {"role": "assistant", "content": response, "success": True}
             )

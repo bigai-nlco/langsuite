@@ -1,10 +1,13 @@
 # Copyright (c) BIGAI Research. All rights reserved.
 # Licensed under the MIT license.
 from __future__ import annotations
+import json
 
 import re
 from copy import deepcopy
 from math import floor
+
+import requests
 
 from langsuite.actions import ActionFeedback, get_action
 from langsuite.agents.base_agent import AGENT_REGISTRY
@@ -13,9 +16,10 @@ from langsuite.llms import create_llm, create_llm_prompts, process_llm_results
 from langsuite.llms.output_parsers import RegexOutputParser
 from langsuite.shapes import Vector2D
 from langsuite.utils import math_utils
+from langsuite.utils import logging
+from langsuite.utils.io_utils import LLM_gpt35
 from langsuite.utils.logging import logger
 from langsuite.utils.string_utils import camelcase
-
 
 @AGENT_REGISTRY.register()
 class RearrangeAgent(SimpleAgent):
@@ -167,7 +171,7 @@ class RearrangeAgent(SimpleAgent):
                     action_dicts.append(
                         dict(action_name=self._justify_action_name(action_name))
                     )
-                elif action_name in ["pick_up", "drop", "open", "close"]:
+                elif action_name in ["pick_up", "drop", "open", "close", "goto"]:
                     obj_name = action_arg.strip("'").strip('"')
                     obj_id = self._get_obj_id_by_name(obj_name)
                     logger.info("obj name: {} obj id {}.".format(obj_name, obj_id))
@@ -213,11 +217,12 @@ class RearrangeAgent(SimpleAgent):
         if len(self.error_cache) > 0:
             prompts += deepcopy(self.error_cache)
         # prompts.append({"role": "system", "content": str(prompt)})
-
+        response = LLM_gpt35.fetch(prompts)
         self.history_all[f"{len(self.history_all)}"] = prompts[1:]
 
         # self.chat_history.append({"role": "system", "content": str(prompt)})
-        response = self.llm(messages=create_llm_prompts(messages=prompts))
+        #response = self.llm(messages=create_llm_prompts(messages=prompts))
+
         logger.info(response)
         return process_llm_results(response)
 
@@ -238,6 +243,16 @@ class RearrangeAgent(SimpleAgent):
 
 @AGENT_REGISTRY.register()
 class RearrangeAgentReact(RearrangeAgent):
+    def __init__(self, agent_config):
+        super().__init__(agent_config)
+        if 'mem_file' in agent_config:
+            self.mem = dict()
+            with open(agent_config['mem_file'], 'r') as log_file:
+                for line in log_file.readlines():
+                    data: dict = json.loads(line.strip())
+                    for k, v in data.items():
+                        self.mem[k] = v
+
     def parse_response(self, response):
         if not self.status["started"]:
             if any([not_tok in response for not_tok in ["not", "don't"]]):
@@ -254,14 +269,34 @@ class RearrangeAgentReact(RearrangeAgent):
                 )
             else:
                 self.status["started"] = True
-                return dict(
-                    response=response,
-                    feedback=self.env.feedback_builder.build(
-                        "Start",
-                        original_state=self.env.target_pose_description,
-                        observation=self.env.get_observation(self),
-                    ),
-                )
+                if hasattr(self, 'mem'):
+                    history = self.mem.get(self.env.task_log_file_name)
+                    logging.logger._logger.info(f'{self.env.task_log_file_name}: {history}')
+                    # if history is not None:
+                    #     desc = self.env.get_task_def() + 'Your memory for the task is below:\n' + history
+                    # else:
+                    #     desc = self.env.get_task_def()
+                    if history is None or self.env.get_task_def() is None:
+                        info = f"Do not need refleaction for {self.env.task_log_file_name}"
+                        raise Exception(info)
+                    desc = self.env.get_task_def() + '\nYour memory for the task is below:\n' + history
+                    return dict(
+                        response=response,
+                        feedback=self.env.feedback_builder.build(
+                            "Start",
+                            original_state=self.env.target_pose_description,
+                            observation=self.env.get_observation(self, on_start=True),
+                        ),
+                    )
+                else:
+                    return dict(
+                        response=response,
+                        feedback=self.env.feedback_builder.build(
+                            "Start",
+                            original_state=self.env.target_pose_description,
+                            observation=self.env.get_observation(self, on_start=True),
+                        ),
+                    )
         else:
             thought = []
             act = []

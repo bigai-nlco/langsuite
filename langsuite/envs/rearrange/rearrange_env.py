@@ -40,6 +40,7 @@ class Rearrange2DEnv(LangSuiteEnv):
         self.children2parent = {}
         self.target_pose_description = None
         # self.id2objects = {}
+        self.is_high = env_config.get('is_high_level')
 
     def random_world_position(self):
         if self.world:
@@ -455,6 +456,32 @@ class Rearrange2DEnv(LangSuiteEnv):
             observation += "nothing. "
         return observation
 
+    def get_receptacle_objects(self):
+        objs = {}
+        for id, obj in self.world.objects.items():
+            if (
+                "receptacle" in obj.props
+                and obj.props["receptacle"]
+            ):
+                objs[id] = obj
+        return objs
+
+    def get_look_around_observation(self, agent):
+        observed_objects = self.get_receptacle_objects()
+        observation = "You are in the middle of a room. Looking quickly around you, you see "
+        
+        if len(observed_objects) == 0:
+            observation += "nothing."
+        else:
+            for obj_id in observed_objects:
+                observation += (
+                    "a " + self.object_id2name[obj_id] + ", "
+                )
+        if observation.strip().endswith(", "):
+            observation = observation[:-1] + "."
+        return observation
+
+
     def get_agent_position_observation(self, agent):
         agent_description = "Now you are in the {} of the room facing {}. "
         rand_room_id = list(self.world.rooms.keys())[0]
@@ -500,7 +527,10 @@ class Rearrange2DEnv(LangSuiteEnv):
 
         return agent_description.format(position, direction)
 
-    def get_observation(self, agent):
+    def get_observation(self, agent, on_start = False):
+        if self.is_high and on_start:
+            return self.get_look_around_observation(agent)
+
         # self.render_matplotlib()
         observed_objects = self.get_observed_objects(agent)
         large_objs = []
@@ -693,8 +723,10 @@ class Rearrange2DEnv(LangSuiteEnv):
             right_observation += ". "
         observation = middle_observation + left_observation + right_observation
         if len(observation) == 0:
-            observation = "You see nothing. You can try to take action like move_ahead, turn_left or turn_right to explore the room."
-
+            if (self.is_high):
+                observation = "You see nothing. You can goto other objects to explore the room."
+            else:
+                observation = "You see nothing. You can try to take action like move_ahead, turn_left or turn_right to explore the room."
         # agent_position_observation = self.get_agent_position_observation(agent)
         return observation
 

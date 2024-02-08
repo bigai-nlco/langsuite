@@ -1,8 +1,9 @@
 task: RearrangementTask:Rearrange2DEnv
-template: ./langsuite/envs/rearrange/templates/rearrange_react_expert.json
+template: ./langsuite/envs/rearrange/templates/rearrange_react-hl.json
 
 env:
   type: Rearrange2DEnv
+  is_high_level: True
 
 world:
   type: RearrangeWorld
@@ -10,8 +11,8 @@ world:
   grid_size: 0.25
 
 agents:
-  - type: RearrangeExpertAgent
-    position: 'random'
+  - type: RearrangeAgentReact
+#    position: 'random'
     inventory_capacity: 1
     focal_length: 10
     max_manipulate_distance: 2

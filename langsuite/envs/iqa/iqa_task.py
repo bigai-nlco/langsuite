@@ -28,7 +28,7 @@ def load_data(data_dir):
         Returns:
             list: A list of task data dictionaries, each containing world and question-answer pairs.
     """
-    iqa_data = json.load(open(Path(data_dir, "data", "iqa", "iqa_list_qa.json")))
+    iqa_data = json.load(open(Path(data_dir, "data", "iqa", "iqa_test", "iqa_test_1k.json")))
     # iqa_data = json.load(open(Path(data_dir, "data", "iqa", "iqa_list_qa_counts_300.json")))
 
     task_data = []
@@ -81,6 +81,8 @@ class IqaTask(BaseTask):
 
     @classmethod
     def create(cls, task_cfg, task_data=None):
+        if not task_data:
+            task_data = random.choice(load_data(IqaPath))
 
         env = Iqa2DEnv.create(task_cfg["env"])
         world_confg = deepcopy(task_cfg["world"])
@@ -88,7 +90,8 @@ class IqaTask(BaseTask):
             world_confg.update({"data": task_data["data"]["world_data"]})
     
         #HACK XXX
-        setattr(env, 'task_log_file_name', task_data['log_file'])
+        if 'log_file' in task_data:
+            setattr(env, 'task_log_file_name', task_data['log_file'])
 
         env.create_world(world_confg)
         env.set_feedback_builder(TemplateBuilder(task_cfg["template"]))

@@ -3,8 +3,8 @@ import json
 import logging
 import os
 
-#r_path = "/home/wtding/langsuite-dev/data/babyai/reflexion_examples"
-#r_path = "/home/wtding/langsuite-dev/data/babyai/reflexion_examples_nomem"
+#r_path = "./data/babyai/reflexion_examples"
+#r_path = "./data/babyai/reflexion_examples_nomem"
 with open(r_path, 'r') as f:
     FEW_SHOT_EXAMPLES = f.read()
 
@@ -70,11 +70,11 @@ def send_request(kw):
         return 'An error occurred while sending the request'
     
     
-folder_name = "/home/wtding/langsuite-dev/babyai_gpt3.5_react/"
-memory_path = "/home/wtding/langsuite-dev/babyai_gpt3.5_reflexion/save/memory.txt"
-#folder_name = "/home/wtding/langsuite-dev/babyai_gpt3.5_react_emmem/"
-#memory_path = "/home/wtding/langsuite-dev/babyai_gpt3.5_reflexion_emmem/save/memory.txt"
-skip_path = "/home/wtding/langsuite-dev/langsuite/envs/babyai/reflexion_history.txt"
+folder_name = "./babyai_gpt3.5_react/"
+memory_path = "./babyai_gpt3.5_reflexion/save/memory.txt"
+#folder_name = "./babyai_gpt3.5_react_emmem/"
+#memory_path = "./babyai_gpt3.5_reflexion_emmem/save/memory.txt"
+skip_path = "./langsuite/envs/babyai/reflexion_history.txt"
 count = 0
 files = os.listdir(folder_name)
 skip_file = open(skip_path, 'r+')

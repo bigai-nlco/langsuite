@@ -31,7 +31,7 @@ with open("langsuite/envs/alfred/prompt_example/prompt_react_self_loc.json", 'r'
     examples = json.load(f)
 
 def load_data(data_dir, stage):
-    # memory_path = "/home/wangmengmeng/workplace/gitlab/sim2text/scripts/test/alfred_test/memory_high_loc_50_1.txt"
+    # memory_path = "./scripts/test/alfred_test/memory_high_loc_50_1.txt"
     tasks = []
     # task_types = [
     #     "look_at_obj_in_light",
@@ -53,7 +53,6 @@ def load_data(data_dir, stage):
     # dev_data = {"a": [1] * 11}
     for _, task_paths in dev_data.items():
         for task_path in task_paths:
-            # task_path = "json_2.1.0/valid_seen/pick_clean_then_place_in_recep-SoapBar-None-BathtubBasin-423/trial_T20190908_064808_086925/traj_data_converted.json"
             task_description = ""
             with open(
                 Path(data_dir).joinpath(task_path),
@@ -131,10 +130,11 @@ class AlfredTask(BaseTask):
     @classmethod
     def create(cls, task_cfg, task_data=None):
         if not task_data:
-            # tasks = load_data(Path(AlfredPath, "data", "alfred"), "train")
-            # task_data = random.choice(tasks)
-            path = "./data/alfred"
-            tasks = load_data(path, "dev")
+            path = "./data/alfred/alfred_test"
+            tasks = load_data(path, "test")
+            task_data = random.choice(tasks)
+            # path = "./data/alfred"
+            # tasks = load_data(path, "dev")
 
             index = random.randint(0, len(tasks) - 1)
             task_data = tasks[index]

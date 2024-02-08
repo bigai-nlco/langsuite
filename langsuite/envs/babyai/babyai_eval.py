@@ -74,7 +74,7 @@ ProjectPath = Path(__file__).parent.parent.parent.parent
 def main():
     # stage = "iqa_data_folder/"
     # a = os.path.join(ProjectPath, stage, newnewest_folder, "console-logs/")
-    path = "/home/wangmengmeng/workplace/gitlab/sim2text/scripts/test/babyai_gpt3.5/console-logs/"
+    path = "./scripts/test/babyai_gpt3.5/console-logs/"
     if len(sys.argv) == 2:
         path = sys.argv[1]
     if not os.path.exists(path):

@@ -19,40 +19,8 @@ from langsuite.llms import create_llm, create_llm_prompts, process_llm_results
 from langsuite.llms.output_parsers import RegexOutputParser
 from langsuite.shapes import Point2D, Vector2D
 from langsuite.utils import logging
+from langsuite.utils.io_utils import LLM_gpt35
 from langsuite.utils.logging import logger
-
-
-
-def llm_gpt_35(messages, max_gen=100):
-    # 替换为自己的KEY
-    messages = [{"role": message["role"], "content": message["content"]} for message in messages]
-    api_key = ""
-    try:
-        api_url = 'https://one.aiskt.com/v1/chat/completions'
-        # 设置请求头部，包括 API 密钥
-        headers = {
-            'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json'
-        }
-        # 准备请求的数据
-        payload = {
-            'model': "gpt-3.5-turbo-16k",
-            'messages': messages
-        }
-        # 发送 POST 请求
-        response = requests.post(api_url, headers=headers, data=json.dumps(payload))
-#        print(response.text)
-        # 检查响应状态
-        if response.status_code == 200:
-            # 解析响应并提取需要的信息
-            data = response.json()
-            return data['choices'][0]['message']['content']
-        else:
-            return f'Error: Received status code {response.status_code}'
-    except Exception as e:
-        return 'An error occurred while sending the request'
-
-
 
 @AGENT_REGISTRY.register()
 class BabyAIAgent(Agent):
@@ -287,7 +255,7 @@ class BabyAIAgent(Agent):
         self.history_all[f"{len(self.history_all)}"] = prompts[1:]
 
 #        response = self.llm(messages=create_llm_prompts(messages=prompts))
-        response = llm_gpt_35(prompts)
+        response = LLM_gpt35.fetch(prompts)
 
         logger._logger.info(response)
         return process_llm_results(response)
@@ -506,7 +474,7 @@ class BabyAIAgentReflexion(BabyAIAgent):
     def __init__(self, agent_config: Dict) -> None:
         super().__init__(agent_config)
         self.history = dict()
-        with open('/home/wtding/langsuite-dev/babyai_gpt3.5_reflexion_emmem/save/memory.txt', 'r') as log_file:
+        with open('./babyai_gpt3.5_reflexion_emmem/save/memory.txt', 'r') as log_file:
             for line in log_file.readlines():
                 data: dict = json.loads(line.strip())
                 for k, v in data.items():
