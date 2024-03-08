@@ -1,0 +1,153 @@
+{
+    "attr": [
+        {
+            "name": "isOpen",
+            "premise": "openable"
+        },
+        {
+            "name": "isPickedUp",
+            "premise": "pickupable"
+        },
+        {
+            "name": "isToggled",
+            "premise": "toggleable"
+        },
+        {
+            "name": "isFilledWithLiquid",
+            "premise": "canFillWithLiquid"
+        },
+        {
+            "name": "isSliced",
+            "premise": "sliceable"
+        },
+        {
+            "name": "isCooked",
+            "premise": "cookable"
+        },
+        {
+            "name": "isBroken",
+            "premise": "breakable"
+        },
+        {
+            "name": "isDirty",
+            "premise": "dirtyable"
+        },
+        {
+            "name": "isUsedUp",
+            "premise": "canBeUsedUp"
+        },
+        {
+            "name": "isHeatSource"
+        },
+        {
+            "name": "isColdSource"
+        },
+        {
+            "name": "temperature"
+        },
+        {
+            "name": "receptacle"
+        }
+    ],
+    "inventory_function": [
+        {
+            "source_domain": {
+                "type": "Faucet",
+                "has_attr": {}
+            },
+            "premise_attr": "isToggled",
+            "premise_value": true,
+            "on_attr": "isFilledWithLiquid",
+            "value": "Water",
+            "target_domain": "BathtubBasin"
+        },
+        {
+            "source_domain": {
+                "type": "Faucet",
+                "has_attr": {}
+            },
+            "premise_attr": "isToggled",
+            "premise_value": true,
+            "on_attr": "isFilledWithLiquid",
+            "value": "Water",
+            "target_domain": "SinkBasin"
+        },
+        {
+            "source_domain": {
+                "type": "StoveKnob",
+                "has_attr": {}
+            },
+            "premise_attr": "isToggled",
+            "premise_value": true,
+            "on_attr": "isToggled",
+            "target_domain": "StoveBurner"
+        }
+    ],
+    "receptacle_function": [
+        {
+            "source_domain": {
+                "type": "CoffeeMachine",
+                "has_attr": {}
+            },
+            "premise_attr": "isToggled",
+            "premise_value": true,
+            "on_attr": "isFilledWithLiquid",
+            "value": "Coffee",
+            "target_domain": "Mug"
+        },
+        {
+            "source_domain": {
+                "type": "CoffeeMachine",
+                "has_attr": {}
+            },
+            "premise_attr": "isToggled",
+            "premise_value": true,
+            "on_attr": "temperature",
+            "value": "Hot",
+            "target_domain": "Mug"
+        },
+        {
+            "source_domain": {
+                "type": null,
+                "has_attr": {
+                    "isHeatSource": true
+                }
+            },
+            "premise_attr": "isToggled",
+            "premise_value": true,
+            "on_attr": "temperature",
+            "value": "Hot"  
+        },
+        {
+            "source_domain": {
+                "type": null,
+                "has_attr": {
+                    "isColdSource": true
+                }
+            },
+            "premise_attr": null,
+            "on_attr": "temperature",
+            "value": "Cold"  
+        },
+        {
+            "source_domain": {
+                "type": "SinkBasin",
+                "has_attr": {}
+            },
+            "premise_attr": "isFilledWithLiquid",
+            "premise_value": "Water",
+            "on_attr": "isDirty",
+            "value": false 
+        },
+        {
+            "source_domain": {
+                "type": "BathtubBasin",
+                "has_attr": {}
+            },
+            "premise_attr": "isFilledWithLiquid",
+            "premise_value": "Water",
+            "on_attr": "isDirty",
+            "value": false 
+        }
+    ]
+}

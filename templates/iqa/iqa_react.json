@@ -1,0 +1,111 @@
+{
+    "intro": {
+        "default": [
+            "As an autonomous intelligent agent, you are now navigating a virtual home, and your task is to answer a question about the vitual home. You will have access to the following information: \nQuestion: This is the question that you need to navigate the room and answer.\nObs: These are the objects within your view. You can see at most {max_view_steps} step(s) in front of you; {left_degree} degrees on your left, {right_degree} degrees on your right.\nFeedback: Whether the action is successful and the reason for success or failure.\n\nAt each step, you can choose to think you plan and/or execute an action from one of the following:\n`move_ahead`: Move ahead by 1 step.\n`turn_left`: Turn left 90 degrees.\n`turn_right`: Turn right 90 degrees.\n`open [object_name]`: Open an openable and visible object within your manipulation distance.\n`answer [answer_information]`: Issue this action when you think you are confident enough to answer the question,answer_information may be True, False, numerical, depending on the question.\n\nTo be successful, it's crucial to THINK BEFORE YOU ACT and follow these rules:\n1. Issue only ONE valid action and/or ONE thought based on the current observation.\n2. After issuing an action, wait for feedback before proceeding.\n3. Format actions correctly by starting with \"Act:\" and put the parameters in bracket. If there are multiple parameters, seperate them by ','. For example, \"Act: pick_up [cup_0]\".\n4. Operate objects only within your view distance.\n5. If an action fails, try other actions to proceed the task. \n6. Issue a stop action when you believe you have achieved the objective. Do not generate anything after stop.\n7. State your thought process by starting with \"Thought:\"\nPlease note that the agent will get a negative reward if it fails to complete the task.\n\nHere are some examples:\n{example}\n\nPlease respond YES if you can play this game."
+        ]
+    },
+    "example": {
+        "0": [
+            "Question: Is there a mug in the room?\nObs: In front of you, You see a Basketball_1,a Spoon_1,a Stool_1;On your left, you see a baseball_1.\n> Thought: I should try my best to find the mug in the room.\nOK.\n> Act: move_ahead\nFeedback: Action succeeded.\nObs: In front of you, You see a Basketball_2, a Spoon_1,a Plate_1.\n> Thought: Mugs are unlikely to appear with basketballs, I will try to explore another direction.\nOK.\n> Act: turn_right\nFeedback: Action succeeded.\nObs: In front of you, You see a mug_1, a Pot_1, a fridge_1.\n> Thought: Found it!\nOK.\n> Act: answer [True]"
+        ],
+        "1": [
+            "Question: I think there is a potato in the fridge. Is that correct?\nObs: In front of you, You see a potato_0,a winebottle_0,a cabinet_2;On your left, you see a baseball_1.\n> Thought: I should find the fridge and open it to see if there is a potato.\nOK.\n> Act: move_ahead\nFeedback: Action succeeded.\nObs: In front of you, You see a potato_0;a winebottle_0;a cabinet_2.\n> Thought: There is no fridge in front of me, maybe I should turn around to check other directions.\nOK.\n> Act: turn_right\nFeedback: Action succeeded.\nObs: In front of you, You see a fridge_0.\n> Thought: Maybe there is a potato in the fridge_0? I should open it.\nOK.\n> Act: open [fridge_0]\nFeedback: Action succeeded.\nObs: In/on it you You see mug_1 in/on it.\n> Thought: there is no potato in the fridge.\nOK.\n> Act: answer [False]"
+        ],
+        "2": [
+            "Question: Count the number of apples in this room.\nObs: In front of you, You see a bowl_0; a stool_0; a tomato_0; On your left, you see a butterknife_0; a cabinet_6; a coffeemachine_0; a book_0;\n> Thought: I should try my best to find all the apples in the room.\nOK.\n> Act: move_ahead\nFeedback: Action succeeded.\nObs: In front of you, You see a bowl_0; a stool_0; On your left, you see a butterknife_0; a cabinet_6; a coffeemachine_0;\n> Thought: zero, I should explorate more.\nOK.\n> Act: move_ahead\nFeedback: Action failed because there is an obstacle.\nObs: In front of you, You see a bowl_0; a stool_0; On your left, you see a butterknife_0; a cabinet_6; a coffeemachine_0;\n> Thought: zero, I faild to move ahead, I can turn around to explore otherewhere.\nOK.\n> Act: turn_right\nFeedback: Action succeeded.\nObs: In front of you, You see a butterknife_0; a cabinet_6; a coffeemachine_0;\n> Thought: zero, I should explorate more.\nOK.\n> Act: move_ahead\nFeedback: Action succeeded.\nObs: In front of you, You see a apple_0; a potato_1;a fridge_0; On your left, you see a cabinet_2;\n> Thought: One, there could be more apples, I should keep exploring. May there is another apple in the fridge_0, I should check these openable receptacles.\nOK.\n> Act: open [fridge_0]\nFeedback: Action succeeded.\nObs: In/on it you see apple_0; potato_1; apple_1; On your left, you see a cabinet_2;\n> Thought: Two, there could be more apples, I should keep exploring.\nOK.\n> Act: turn_right\nFeedback: Action succeeded.\nObs: In front of you, you see nothing; On your left, you see a fridge_0; a apple_0; a potato_1;\n> Thought: Two, keep looking.\nOK.\n> Act: move_ahead\nFeedback: Action succeeded.\nObs: In front of you, You see a apple_3, a tomato_0; On your right, you see a butterknife_0;\n> Thought: Three! I have seen the tomato_0 again, so I have explored the entire room.\nOK.\n> Act: answer [3]"
+        ]
+    },
+    "InvalidAction": {
+        "default": [
+            "Invalid action {action}"
+        ],
+        "failure.actionNotFound": [
+            "Feedback: Action failed. There is no valid action in your response. Please generate action in a correct format. You must put action arguments in brackets. Choose one action from the list: `move_ahead`, `turn_left`, `turn_right`, `pick_up [object_name]`, `drop`, `open [object_name]`, `close [object_name]`, `toggle_on [object_name]`, `toggle_off [object_name]`, `slice [object_name]`, put [object_name, receptacle_name]."
+        ],
+        "failure.multipleActions": [
+            "Feedback: Action failed. I found multiple actions in your response, please only respond with one action at a time. For example, \"Act: move_ahead\""
+        ],
+        "failure.objectNotInView": [
+            "Feedback: Action failed. Object {object} is not in view space.\nObs: {observation}"
+        ],
+        "failure.notOpenable": [
+            "Feedback: Action failed. Object {object} is not openable.\nObs: {observation}"
+        ],
+        "failure.objectNotProvide": [
+            "Feedback: Action failed. You did not provide an object or the object name is wrong. Please operate the object in sight.\nObs: {observation}"
+        ]
+    },"Stop": {
+        "success": [
+            "Your are right!"
+        ],
+        "failure": [
+            "Your are wrong!"
+        ]
+    },
+    "Start": {
+        "default": [
+            "\nQuestion: {task_description}\nObs: {observation}  "
+        ]
+    },
+    "MoveAhead": {
+        "success.default": [
+            "Feedback: Action succeeded. Moved forward by 1 step.\nObs: {observation}"
+        ],
+        "failure.isBlocked": [
+            "Feedback: Action failed. Can not move ahead, because there is an obstacle ahead.\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed.\nObs: {observation}"
+        ],
+        "default": [
+            "Feedback: Action Move_AHEAD.\nObs: {observation}"
+        ]
+    },
+    "MoveBack": {
+        "success.default": [
+            "Successful action:True\nObs:{observation}"
+        ],
+        "success.done": [
+            "Game is over."
+        ],
+        "failure.isBlocked": [
+            "Successful action:False\nObs:{observation}"
+        ],
+        "failure.default": [
+            "Action MoveBack failed."
+        ],
+        "default": [
+            "Action MoveBack."
+        ]
+    },
+    "TurnLeft": {
+        "success.default": [
+            "Feedback: Action succeeded. Turn left by '{degree}' degrees.\nObs: {observation}"
+        ]
+    },
+    "TurnRight": {
+        "success.default": [
+            "Feedback: Action succeeded. Turn right by '{degree}' degrees.\nObs: {observation}"
+        ]
+    },
+    "Open": {
+        "success.default": [
+            "Feedback: Action succeeded.\nObs:{observation}"
+        ],
+        "failure.notInView": [
+            "Feedback: Action failed.\n Object {object} is not in view space. Now all the objects you can see are:{observation}. What's your next action?"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to open {object}.\nObs: {observation}"
+        ],
+        "failure.objectNotInView": [
+            "Feedback: Action failed. Object {object} is not in view space.\nObs: {observation}"
+        ],
+        "failure.notOpenable": [
+            "Feedback: Action failed. Object {object} is not openable.\nObs: {observation}"
+        ],
+        "failure.objectNotProvide": [
+            "Feedback: Action failed. You did not provide an object or the object name is wrong. Please operate the object in sight.\nObs: {observation}"
+        ]
+    }
+}

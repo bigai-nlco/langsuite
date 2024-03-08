@@ -1,0 +1,33 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.4.0
+  hooks:
+  - id: trailing-whitespace
+  - id: end-of-file-fixer
+    exclude: 'data/.*'
+  - id: check-yaml
+  - id: check-added-large-files
+    exclude: 'assets/.*|data/.*'
+  - id: requirements-txt-fixer
+
+- repo: https://github.com/psf/black
+  rev: 23.3.0
+  hooks:
+  - id: black
+    types: [python]
+    files: '.py'
+
+- repo: https://github.com/PyCQA/autoflake
+  rev: v2.2.1
+  hooks:
+  - id: autoflake
+    args: [--remove-all-unused-imports, --in-place, --exclude, "langchain.py", --ignore-init-module-imports]
+
+
+- repo: https://github.com/pycqa/isort
+  rev: 5.12.0
+  hooks:
+    - id: isort
+      name: isort (python)
+      args: ["--profile", "black", "--filter-files", "--multi-line", "3", "--trailing-comma", "--force-grid-wrap", "0", "--combine-as", "--line-width", "88", "--atomic", "--use-parentheses"]
+      files: '.py'

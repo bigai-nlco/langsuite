@@ -1,0 +1,6 @@
+llm_type: ChatOpenAI
+deployment_name: your_deployment_name
+model_version: gpt-3.5-turbo
+openai_api_key: your_api_key_here
+openai_organization: ""
+openai_proxy: ""

@@ -1,0 +1,16 @@
+task: AlfredTask_V0
+
+template: ./templates/alfred/alfred_react.json
+
+world:
+
+agents:
+  - type: ChatAgent
+    from_user: True
+    debug: True
+#  - type: ExpertAgent
+    inventory_capacity: 5
+    focal_length: 10
+    max_manipulate_distance: 2
+    max_view_distance: 2
+    step_size: 0.25
