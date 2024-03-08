@@ -35,10 +35,10 @@ class ChatAgent(LangSuiteAgent):
         if not self.from_user:
             if not self.debug:
                 self.llm = create_llm(agent_data.get("llm"))
-            if self.llm is None:
-                logger.warn("Failed to create LLM, will use user_input.")
-            else:
-                logger.warn("Created LLM: %s", self.llm)
+                if self.llm is None:
+                    logger.warn("Failed to create LLM, will use user_input.")
+                else:
+                    logger.warn("Created LLM: %s", self.llm)
         else:
             self.llm = None
         self.cmd_cli: Optional[CMDClient] = None
@@ -146,7 +146,7 @@ class ChatAgent(LangSuiteAgent):
                 self.cmd_cli.agent_step(message)
             return {}
 
-        if self.llm is None or self.from_user:
+        if self.from_user:
             if self.cmd_cli:
                 content = self.cmd_cli.agent_step(message, user_input=True)
             else:
@@ -159,7 +159,7 @@ class ChatAgent(LangSuiteAgent):
             if self.cmd_cli:
                  self.cmd_cli.agent_step(message)
             
-            if self.debug:
+            if self.debug or getattr(self, 'llm', None) is None:
                 # Naive requests
                 response = debug_utils.manual_request(messages)
             else:               
