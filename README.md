@@ -188,7 +188,7 @@ agents:
     focal_length: 10
     max_manipulate_distance: 2
     max_view_distance: 2
-    step_size: 0.25```
+    step_size: 0.25
 ```
 
 ### Prompt Template
