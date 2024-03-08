@@ -174,38 +174,28 @@ The user inferface will run on http://localhost:8501/
 
 ### Task Configuration
 ```yaml
-task: ExampleTask:Procthor2DEnv
-template: ./langsuite/envs/ai2thor/templates/procthor_rearrange.json
+task: AlfredTask_V0
 
-env:
-  type: Procthor2DEnv
+template: ./templates/alfred/alfred_react.json
 
 world:
-  type: ProcTHORWorld
-  id: test_world
-  grid_size: 0.25
-  asset_path: ./data/asset-database.json
-  metadata_path: ./data/ai2thor-object-metadata.json
-  receptacles_path: ./data/receptacles.json
 
 agents:
-  - type: ChatGPTAgent
-    position: 'random'
-    inventory_capacity: 1
+  - type: ChatAgent
+    from_user: True       # Chat with user
+    debug: True           # Use raw request instead of langchain
+    inventory_capacity: 5
     focal_length: 10
-    max_manipulate_distance: 1
+    max_manipulate_distance: 2
     max_view_distance: 2
-    step_size: 0.25
-    llm:
-      llm_type: ChatOpenAI
-```
+    step_size: 0.25```
 
 ### Prompt Template
 ```json
 {
     "intro": {
         "default": [
-            "You are an autonomous intelligent agent tasked with navigating a vitual home. You will be given a household task. These tasks will be accomplished through the use of specific actions you can issue. [...]"
+            "As an autonomous intelligent agent, you are now navigating a virtual home, and your task is to perform household tasks using specific actions. [...]"
         ]
     },
     "example": {
