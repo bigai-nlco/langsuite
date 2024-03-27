@@ -3,7 +3,7 @@ from copy import deepcopy
 from email import message
 import json
 import re
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from overrides import override
 import requests
@@ -59,13 +59,17 @@ class ExpertAgent(LangSuiteAgent):
         self.history_all = {}
 
     @override
-    def init(self, task_description: str) -> str:
+    def init(self, task_description: str, extra_info: Dict[str, str]) -> str:
         start_info = self.template["intro"]["default"]["template"]
         params = self.template["intro"]["default"]["params"]
         for param in params:
             if param == "example":
                 start_info = start_info.replace(
                     "{" + param + "}", self.template["example"]["default"]["template"]
+                )
+            elif param in extra_info:
+                start_info = start_info.replace(
+                    "{" + param + "}", extra_info[param]
                 )
             else:
                 start_info = start_info.replace(

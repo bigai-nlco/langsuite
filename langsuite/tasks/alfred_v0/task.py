@@ -130,41 +130,6 @@ class AlfredTask_V0(LangsuiteTask):
         return min(p_infos, key=lambda x: c_info[1].distance(x[1]))[0]
 
     @classmethod
-    def _receptacles_hack(
-        cls, old_deps: Dict[str, str], flat_objects: Dict[str, Dict]
-    ) -> List[dict]:
-        """
-        Conver flat_objects with alfread-style rels into nested.
-
-        :param old_rels: raw receptacle rels, child -> parents, use objectId as keys and values.
-        :type old_rels: dict
-        :param flat_objects: raw objects, key = objectId. !!! will modify this variable.
-        :type flat_objects: dict
-        :rtype: list # format is adopted from procthor.
-        """
-        dependency = []
-        for obj in old_deps:
-            if len(old_deps[obj]) > 1:
-                obj_data = flat_objects[obj]
-                parents_data = map(lambda x: flat_objects[x], old_deps[obj])
-                receptacle = cls._multi_receptacle_hack(obj_data, parents_data)
-            elif len(old_deps[obj]) == 1:
-                receptacle = old_deps[obj][0]
-            else:  # len == 0
-                continue
-            dependency.append((obj, receptacle))
-        order = WUtils.ordering_objects(dependency, flat_objects.keys())
-        logging.logger.debug("sorted obj_id: %s", order)
-        dep_map = defaultdict(list)
-        for obj, rec in dependency:
-            dep_map[rec].append(obj)
-        logging.logger.debug("dependencies: %s", dep_map)
-        for rec in order:
-            for obj in dep_map[rec]:
-                flat_objects[rec]["children"].append(flat_objects.pop(obj))
-        return list(flat_objects.values())
-
-    @classmethod
     @override
     def _convert_task_data_format(cls, task_cfg, raw_task_data) -> dict:
         task_cfg["task_description"] = raw_task_data["turk_annotations"]["anns"][0][
@@ -191,6 +156,8 @@ class AlfredTask_V0(LangsuiteTask):
         receptacles_rels = dict()
 
         for object_data in scence_data["objects"]:
+            if object_data['objectType'] == 'Floor':
+                continue
             object_data["assetId"] = object_data.pop("name")
             if object_data["objectBounds"]:
                 bounding_box = object_data.pop("objectBounds")
@@ -214,7 +181,7 @@ class AlfredTask_V0(LangsuiteTask):
             elif object_data["objectType"] == "Door":
                 doors.append(object_data)
 
-        world_data["objects"] = cls._receptacles_hack(receptacles_rels, objects)
+        world_data["objects"], _ = WUtils.receptacles_hack(receptacles_rels, objects)
 
         world_data["doors"] = doors
         world_data["windows"] = windows

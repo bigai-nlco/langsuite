@@ -108,11 +108,11 @@ class LangsuiteTask(ABC, EnforceOverrides):
     def _convert_task_data_format(cls, task_cfg, raw_task_data) -> dict:
         pass
 
-    def run(self):
+    def run(self, extra_info = {}):
         action_dict = {}
         final_reward_dict = {}
         for ag_id, agent in self.env.agents.items():
-            action_dict[ag_id] = agent.init(self.task_description)
+            action_dict[ag_id] = agent.init(self.task_description, extra_info)
         running = True
 
         while running:
@@ -141,4 +141,4 @@ def make_task(task: Union[str, dict], *args, **kwargs) -> LangsuiteTask:
     if TASK_REGISTRY.hasRegistered(task_name):
         return TASK_REGISTRY.get(task_name).create(task_cfg, *args, **kwargs)
 
-    raise ValueError(f"Task {task_name} is not defined.")
+    raise ValueError(f"Task {task_name} is not defined.", )

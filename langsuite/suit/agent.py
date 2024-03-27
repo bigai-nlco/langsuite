@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from matplotlib.dates import TU
 
 from overrides import EnforceOverrides
@@ -24,7 +24,7 @@ class LangSuiteAgent(ABC, EnforceOverrides):
 
 
     @abstractmethod
-    def init(self, task_description: str) -> str:
+    def init(self, task_description: str, extra_info: Dict[str, str]) -> str:
         pass
 
     def update_config(self, config: dict):

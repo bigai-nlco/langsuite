@@ -45,7 +45,6 @@ class IQATask_V0(LangsuiteTask):
             recept=task_data['target_status'].get('recept')
         )
 
-
     @override
     def make_handler(self) -> MessageHandler:
         name_mapping = {x.name: x.__name__ for x in self.ACTIONS}
@@ -66,6 +65,7 @@ class IQATask_V0(LangsuiteTask):
 
     @classmethod
     def load_data(cls, data_dir, stage):
+        # FIXME support different stages
         iqa_data = json.load(open(Path(data_dir, "iqa_test", "iqa_test_1k.json")))
         # iqa_data = json.load(open(Path(data_dir, "data", "iqa", "iqa_list_qa_counts_300.json")))
 
@@ -157,36 +157,10 @@ class IQATask_V0(LangsuiteTask):
         world_data["rooms"] = rooms
 
         # convert object
-        doors = []
-        windows = []
-        objects = dict()
-        world_data["objects"] = []
-        receptacles_rels = dict()
-
-        for object_data in scence_data["objects"]:
-            new_data = copy.deepcopy(object_data)
-            new_data["assetId"] = new_data.pop("name")
-            if "objectBoundsCorners" in new_data:
-                new_data["objectOrientedBoundingBox"] = new_data.pop("objectBounds")
-                new_data["objectOrientedBoundingBox"]["cornerPoints"] = new_data[
-                    "objectOrientedBoundingBox"
-                ].pop("objectBoundsCorners")
-
-            new_data["rotation"] = {"x": 0.0, "y": 0.0, "z": 0.0}
-            obj_id = new_data["objectId"]
-            if new_data["parentReceptacles"] is not None:
-                receptacles_rels[obj_id] = new_data["parentReceptacles"]
-            objects[obj_id] = new_data
-            new_data["children"] = list()
-            if object_data["objectType"] == "Window":
-                windows.append(new_data)
-            elif object_data["objectType"] == "Door":
-                doors.append(new_data)
-
-        world_data["objects"] = cls._receptacles_hack(receptacles_rels, objects)
-
-        world_data["doors"] = doors
-        world_data["windows"] = windows
+        converted = WUtils.ai2thor_obj_2_procthor(scence_data["objects"])
+        world_data["objects"] = converted[0]
+        world_data["doors"] = converted[1]
+        world_data["windows"] = converted[2]
 
         ag_init = scence_data["agent"]
         ag_rot = ag_init["rotation"]["y"]

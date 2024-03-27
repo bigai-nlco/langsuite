@@ -177,10 +177,10 @@ class Basic2DWorld_V0(World):
         return False
 
     def _iter_get_independent_objects(
-        self, entity: PhysicalEntity2D, agent: PhysicalAgent
+        self, entity: PhysicalEntity2D, agent: Optional[PhysicalAgent]
     ):
         if not isinstance(entity, Room2D):
-            if self._in_vision(agent, entity):
+            if (agent is None) or self._in_vision(agent, entity):
                 yield entity
         if not getattr(entity, "receptacle", False):
             for child in entity.inventory:
@@ -188,9 +188,9 @@ class Basic2DWorld_V0(World):
 
     # XXX is inherit right?
     def iter_expand2index(
-        self, entity: PhysicalEntity2D, agent: PhysicalAgent, inherit_pos=False
+        self, entity: PhysicalEntity2D, agent: Optional[PhysicalAgent], inherit_pos=False
     ) -> Optional[Dict[str, object]]:
-        if not (inherit_pos or self._in_vision(agent, entity)):
+        if (agent is not None) and not (inherit_pos or self._in_vision(agent, entity)):
             return None
         assert hasattr(entity, "receptacle")
         if entity.receptacle:  # type: ignore
@@ -205,6 +205,14 @@ class Basic2DWorld_V0(World):
                 "index": self.object_id2index(entity.name),
                 **entity.list_textual_attrs(),
             }
+
+    def _chain_expand2index(self, agent, l) -> Sequence[Dict[str, object]]:
+        """l are pre-collected that can't be none"""
+        return list(map(lambda x: self.iter_expand2index(x, agent), l))  # type: ignore
+
+    def describe_all(self) -> Sequence[Dict[str, object]]:
+        objects = self._iter_get_independent_objects(self.ground, agent=None)
+        return self._chain_expand2index(agent=None, l=objects)
 
     # TODO more type of obs
     @override
@@ -246,14 +254,11 @@ class Basic2DWorld_V0(World):
                 elif min_dis[0][0] == "right_distance":
                     right_objs.append(obj)
 
-            def _chain_expand2index(l) -> Sequence[Dict[str, object]]:
-                """l are pre-collected that can't be none"""
-                return list(map(lambda x: self.iter_expand2index(x, agent), l))  # type: ignore
 
             self._observation[agent.name] = {
-                "middle_objs": _chain_expand2index(middle_objs),
-                "left_objs": _chain_expand2index(left_objs),
-                "right_objs": _chain_expand2index(right_objs),
+                "middle_objs": self._chain_expand2index(agent, middle_objs),
+                "left_objs": self._chain_expand2index(agent, left_objs),
+                "right_objs": self._chain_expand2index(agent, right_objs),
             }
 
     @override
@@ -262,7 +267,6 @@ class Basic2DWorld_V0(World):
     ) -> Dict[str, Sequence[Dict[str, object]]]:
         return self._observation[agent_name]
 
-    #TODO: alter obj if they are sliced or broken?
     @override
     def step(
         self, agent_name: str, action_dict: dict
@@ -450,7 +454,7 @@ class Basic2DWorld_V0(World):
             )
             world.agents[agent_id] = pa
         # Agents done.
-
+        logger.debug(world._objects.keys())
         world.update()
         return world
 
@@ -484,6 +488,7 @@ class Basic2DWorld_V0(World):
         location,
         obj_collector: dict,
     ):
+        print(object_info)
         assets_id = object_info["assetId"]
         obj_id = object_info["objectId"]
         # use center instead of real pos is for using axis aligned bbox, don't change it.

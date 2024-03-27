@@ -16,7 +16,7 @@ class AlfredStatus(TaskStatus):
 @dataclass
 class AlfredHandler(Basic2DHandler):
     action_name_map: Dict[str, str]
-    ACTIONS_WITH_NO_ARGS: Set[str] = {"move_ahead", "turn_left", "turn_right", "stop"}
+    ACTIONS_WITH_NO_ARGS: Set[str] = {"move_ahead", "turn_left", "turn_right"}
     ACTIONS_WITH_ONE_ARG: Set[str] = {
         "pick_up",
         "drop",

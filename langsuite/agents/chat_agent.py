@@ -5,7 +5,7 @@ import json
 from multiprocessing import process
 import random
 import re
-from typing import Optional
+from typing import Dict, Optional
 
 from overrides import override
 import requests
@@ -68,7 +68,7 @@ class ChatAgent(LangSuiteAgent):
         # self.history_all = {}
 
     @override
-    def init(self, task_description: str) -> str:
+    def init(self, task_description: str, extra_info: Dict[str, str]) -> str:
         source = random.choice(self.template["intro"]["default"])
         start_info = source["template"]
         params = source["params"]
@@ -76,6 +76,10 @@ class ChatAgent(LangSuiteAgent):
             if param == "example":
                 start_info = start_info.replace(
                     "{" + param + "}", random.choice(self.template["example"]["default"])["template"]
+                )
+            elif param in extra_info:
+                start_info = start_info.replace(
+                    "{" + param + "}", extra_info[param]
                 )
             else:
                 start_info = start_info.replace(
