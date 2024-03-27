@@ -174,30 +174,20 @@ The user inferface will run on http://localhost:8501/
 
 ### Task Configuration
 ```yaml
-task: ExampleTask:Procthor2DEnv
-template: ./langsuite/envs/ai2thor/templates/procthor_rearrange.json
+task: AlfredTask_V0
 
-env:
-  type: Procthor2DEnv
+template: ./templates/alfred/alfred_react.json
 
 world:
-  type: ProcTHORWorld
-  id: test_world
-  grid_size: 0.25
-  asset_path: ./data/asset-database.json
-  metadata_path: ./data/ai2thor-object-metadata.json
-  receptacles_path: ./data/receptacles.json
 
 agents:
-  - type: ChatGPTAgent
-    position: 'random'
-    inventory_capacity: 1
+  - type: ChatAgent
+    inventory_capacity: 5
     focal_length: 10
-    max_manipulate_distance: 1
+    max_manipulate_distance: 2
     max_view_distance: 2
     step_size: 0.25
-    llm:
-      llm_type: ChatOpenAI
+
 ```
 
 ### Prompt Template
@@ -228,7 +218,7 @@ agents:
 If you find our work useful, please cite
 ```bibtex
 @misc{langsuite2023,
-  author    = {Zilong Zheng, Zixia Jia,  Mengmeng Wang, Wentao Ding, Baichen Tong, Songchun Zhu},
+  author    = {Zilong Zheng, Zixia Jia, Mengmeng Wang, Wentao Ding, Baichen Tong, Songchun Zhu},
   title     = {LangSuit⋅E: Controlling, Planning, and Interacting with Large Language Models in Embodied Text Environments},
   year      = {2023},
   publisher = {GitHub},
