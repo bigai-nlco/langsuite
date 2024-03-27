@@ -174,21 +174,30 @@ The user inferface will run on http://localhost:8501/
 
 ### Task Configuration
 ```yaml
-task: AlfredTask_V0
+task: ExampleTask:Procthor2DEnv
+template: ./langsuite/envs/ai2thor/templates/procthor_rearrange.json
 
-template: ./templates/alfred/alfred_react.json
+env:
+  type: Procthor2DEnv
 
 world:
+  type: ProcTHORWorld
+  id: test_world
+  grid_size: 0.25
+  asset_path: ./data/asset-database.json
+  metadata_path: ./data/ai2thor-object-metadata.json
+  receptacles_path: ./data/receptacles.json
 
 agents:
-  - type: ChatAgent
-    from_user: True       # Chat with user
-    debug: True           # Use raw request instead of langchain
-    inventory_capacity: 5
+  - type: ChatGPTAgent
+    position: 'random'
+    inventory_capacity: 1
     focal_length: 10
-    max_manipulate_distance: 2
+    max_manipulate_distance: 1
     max_view_distance: 2
     step_size: 0.25
+    llm:
+      llm_type: ChatOpenAI
 ```
 
 ### Prompt Template
@@ -196,12 +205,12 @@ agents:
 {
     "intro": {
         "default": [
-            "As an autonomous intelligent agent, you are now navigating a virtual home, and your task is to perform household tasks using specific actions. [...]"
+            "As an autonomous intelligent agent, you are now navigating a virtual home, and your task is to perform household tasks using specific actions. You will have access to the following information:  ..."
         ]
     },
     "example": {
         "default": [
-            "Task: go to the red box. \nObs:You can see a blue key in front of you; You can see a red box on your right. \nManipulable object: A blue key.\n>Act: turn_right."
+            "Task: put a clean lettuce in diningtable.\nObs: In front of you, You see a stoveburner_2. On your left, you see a stoveburner_1; a sinkbasin_1. On your right, you see a countertop_1; a tomato_0; a toaster_0.\n> Act: turn_left ..."
         ]
     },
     "InvalidAction": {
@@ -219,7 +228,7 @@ agents:
 If you find our work useful, please cite
 ```bibtex
 @misc{langsuite2023,
-  author    = {Zilong Zheng, Mengmeng Wang, Zixia Jia, Baichen Tong},
+  author    = {Zilong Zheng, Zixia Jia,  Mengmeng Wang, Wentao Ding, Baichen Tong, Songchun Zhu},
   title     = {LangSuit⋅E: Controlling, Planning, and Interacting with Large Language Models in Embodied Text Environments},
   year      = {2023},
   publisher = {GitHub},
