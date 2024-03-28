@@ -1,0 +1,145 @@
+{
+    "intro": {
+        "default": [
+            "As an autonomous intelligent agent, you are now navigating a virtual home, and your task is to rearranging objects to where they were using specific actions. System will randomly change between 1 to 5 objects in the room. Your goal is to identify which objects have changed and reset those objects to their original state. You will have access to the following information: \nOriginal status: The original room status that you should remember, pay your attention to the position and openness states of each of the objects. Then find out all the changed objects and reset them to their origianl states.\nObs: These are the objects within your view. You can see at most {max_view_steps} step(s) in front of you; {left_degree} degrees on your left, {right_degree} degrees on your right.\nInventory: These are the objects you are holding.  You can hold at most {inventory_capacity} objects.\nFeedback: Whether the action is successful and the reason for success or failure.\n\nAt each step, you can choose to execute an action from one of the following:\n`move_ahead`: Move ahead by 1 step.\n`turn_left`: Turn left 90 degrees.\n`turn_right`: Turn right 90 degrees.\n`pick_up [object_name]`: Pick up a pick-upable and visible object within your manipulation distance.\n`drop [object_name]`: Place the object just in front of your right hand.\n`open [object_name]`: Open an openable and visible object within your manipulation distance.\n`close [object_name]`: Close a closeable and visible object.\n`put [object_name, receptacle_name]`: Place the object in hand into/onto the receptacle.\n`stop [answer]`: Issue this action when you believe the task is complete. If you believe the task is impossible to complete, provide the answer as \"N/A\" in the bracket.\n\nTo be successful, it's crucial to follow these rules:\n1. Issue only ONE valid action based on the current observation.\n2. After issuing an action, wait for feedback before proceeding.\n3. Format actions correctly by starting with \"Act:\". For example, \"Act: pick_up [cup_0]\".\n4. Operate objects only within your view distance.\n5. If an action fails, try other actions to proceed the task. \n6. Issue a stop action when you believe you have achieved the objective. Do not generate anything after stop.\n\nPlease note that the agent will get a negative reward if it fails to complete the task.\n\nHere are some examples:\n{example}\n\nRespond YES if you can play this game."
+        ]
+    },
+    "example": {
+        "default": [
+            "Original status: In the room, there a table_0, a desk_0, a table_1, a fridge_0, a bed_0. On the table_0; there are a apple_0, a plate_0. On the plate_0, there are a fork_0; In the fridge_0, there are a potato_0, a mug_0; On the bed_0, there is an pillow_0.\nObs: In front of you, You see a table_0; On table_0, there are a apple_0, a plate_0, a fork_0, a mug_0.\n> Act: pick_up [fork_0]\nFeedback: Action succeeded. current inventories are: fork_0.\nObs: In front of you, You see a table_0; On table_0, there are a apple_0, a plate_0, a mug_0.\n> Act: put [fork_0, plate_0]\nFeedback: Action succeeded.\nObs: In front of you, You see a table_0; On table_0, there are a apple_0, a plate_0, a mug_0; On the plate_0, there are a fork_0.\n> Act: pick_up [mug_0]\nFeedback: Action succeeded.\nObs: In front of you, You see a table_0; On table_0, there are a apple_0, a plate_0; On the plate_0, there are a fork_0.\n> Act: turn_right\nFeedback: Action succeeded.\nObs: In front of you, you see nothing; On your left, you see a table_0; On table_0, there are a apple_0, a plate_0; On the plate_0, there are a fork_0.\n> Act: move_ahead\nFeedback: Action succeeded.\nObs: In front of you, you see nothing; On your left, you see a table_0; On table_0, there are a apple_0.\n> Act: move_ahead\nFeedback: Action succeeded.\nObs: In front of you, you see a bed_0; On your left, you see a table_0; On table_0, there are a apple_0.\n> Act: move_ahead\nFeedback: Action succeeded.\nObs: In front of you, you see a bed_0; On bed_0, there is an pillow_0; On your left, you see a table_0; On table_0, there are a apple_0.\n> Act: turn_right\n..."
+        ]
+    },
+    "InvalidAction": {
+        "failure.actionNotFound": [
+            "I can't find a valid action in your response. Please generate action in a correct format. You must put action arguments in brackets. For example,  `move_ahead`, `turn_left`, `turn_right`, `pick_up [object_name]`, `drop [object_name]`, `open [object_name]`, `close [object_name]`."
+        ],
+        "failure.multipleActions": [
+            "Feedback: Action failed. I found multiple actions in your response, please only respond with one action at a time. For example, \"Act: move_ahead\""
+        ],
+        "failure.invalidObjectName": [
+            "Feedback: Action failed. There is no the object \"{object}\" in your view space. Please operate the object in sight.\nObs: {observation}"
+        ],
+        "failure.objectNotProvide": [
+            "Feedback: Action failed.  The object is not provided or not in sight. You must choose one of the following actions and  must put the object_name in brackets. For example, `pick_up [object_name]`, `drop [object_name]`, `open [object_name]`, `close [object_name]`."
+        ],
+        "failure.objectNotInView": [
+            "Feedback: Action failed. You can not see {object} within your view distance ({max_view_steps} step(s)).\nObs: {observation}"
+        ],
+        "failure.objectNotExist": [
+            "Feedback: Action failed. There is no object \"{object}\" existing. Please operate the object in sight.\nObs: {observation}"
+        ]
+    },
+    "Start": {
+        "default": [
+            "Let's start.\nOriginal state: {task_description}\nObs: {observation}\nwhat is your next step? "
+        ]
+    },
+    "Pass": {
+        "default": [
+            "Please generate action in a correct format. You must put action arguments in brackets. For example, `pick_up [object_name]`, `drop [object_name]`, `open [object_name]`, `close [object_name]`."
+        ]
+    },
+    "Stop": {
+        "default": [
+            "You stopped the game."
+        ],
+        "success": [
+            "[SUCCESS] You have completed the task. Congratulations!"
+        ],
+        "failure": [
+            "[FAIL] You failed to complete the task. Fixed rate: {fixed}; Misplaced rate: {misplaced}."
+        ]
+    },
+    "MoveAhead": {
+        "success.default": [
+            "Feedback: Action succeeded. Moved forward by 1 step.\nObs: {observation}"
+        ],
+        "failure.isBlocked": [
+            "Feedback: Action failed. Can not move ahead, because there is an obstacle ahead.\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed.\nObs: {observation}"
+        ],
+        "default": [
+            "Feedback: Action succeeded.\nObs: {observation}"
+        ]
+    },
+    "RotateLeft": {
+        "success.default": [
+            "Feedback: Action succeeded. Turned left by '{degree}' degrees.\nObs: {observation}"
+        ]
+    },
+    "RotateRight": {
+        "success.default": [
+            "Feedback: Action succeeded. Turned right by '{degree}' degrees.\nObs: {observation}"
+        ]
+    },
+    "PickUpObject": {
+        "success.default": [
+            "Feedback: Action succeeded. You picked {object} up.\nInventory: {inventory}.\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to pick up {object}.\nObs: {observation}"
+        ],
+        "failure.notInView": [
+            "Feedback: Action failed. Object {object} is not in view space.\nObs: {observation}"
+        ],
+        "failure.intentoryFilled": [
+            "Feedback: Action failed. You have already held enough object(s), drop one before you pick up another one. "
+        ],
+        "failure.objectNotProvide": [
+            "Feedback: Action failed. Please generate the action in the correct format. You must put object name in brackets. For example, `pick_up [cup_0]`."
+        ],
+        "failure.notPickupable": [
+            "Feedback: Action failed. Object {object} is not pickupable.\nObs: {observation}"
+        ]
+    },
+    "DropObject": {
+        "success.default": [
+            "Feedback: Action succeeded. You dropped {object}.\nInventory: {inventory}\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to drop {object}.\nObs: {observation}"
+        ],
+        "failure.emptyInventory": [
+            "Feedback: Action failed. Inventory is empty, nothing to drop.\nObs: {observation}"
+        ],
+        "failure.objectNotInInventory": [
+            "Feedback: Action failed. Object {object} is not in your inventory.\nInventory: {inventory}."
+        ]
+    },
+    "OpenObject": {
+        "success.default": [
+            "Feedback: Action succeeded. You opened {object} to openness {openness}.\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to open {object}.\nObs: {observation}"
+        ],
+        "failure.notInView": [
+            "Feedback: Action failed. Object {object} is not in view space.\nObs: {observation}"
+        ],
+        "failure.notOpenable": [
+            "Feedback: Action failed. Object {object} is not openable.\nObs: {observation}"
+        ],
+        "failure.objectNotProvide": [
+            "Feedback: Action failed. You did not provide an object or the object name is wrong. Please operate the object in sight.\nObs: {observation}"
+        ]
+    },
+    "CloseObject": {
+        "success.default": [
+            "Feedback: Action succeeded. You closed {object}.\nObs: {observation}"
+        ],
+        "failure.default": [
+            "Feedback: Action failed. Failed to close {object}.\nObs: {observation}"
+        ],
+        "failure.notInView": [
+            "Feedback: Action failed. Object {object} is not in view space.\nObs: {observation}"
+        ],
+        "failure.notCloseable": [
+            "Feedback: Action failed. Object {object} is not Closeable.\nObs: {observation}"
+        ],
+        "failure.objectNotProvide": [
+            "Feedback: Action failed. You did not provide an object or the object name is wrong. Please operate the object in sight.\nObs: {observation}"
+        ]
+    }
+}
