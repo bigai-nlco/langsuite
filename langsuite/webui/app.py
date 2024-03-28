@@ -95,7 +95,7 @@ def submit_callback():
         st.session_state.submit_clicked = True
         st_logger.info("Button clicked")
 
-
+#TODO It is specfically designed for one world (maybe basic2d_v0 now)
 class StreamlitApp:
     def __init__(self, title="LangSuitE") -> None:
         self.title = title
@@ -164,13 +164,13 @@ class StreamlitApp:
                     st_logger.info(response["feedback"])
                     st.session_state.chat_messages.append(
                         {
-                            "role": "system",
+                            "role": "user",
                             "content": response["feedback"]["state"]["feedback"],
                         }
                     )
 
-            env_cfg = await fetch_config(session)
-            st_logger.info(env_cfg)
+            task_cfg = await fetch_config(session)
+            st_logger.info(task_cfg)
 
             caption = "Map Viewer"
             st.markdown("")
@@ -191,7 +191,7 @@ class StreamlitApp:
                         "Max View Distance",
                         min_value=1.0,
                         max_value=5.0,
-                        value=float(env_cfg["agents"][0]["max_view_distance"]),
+                        value=float(task_cfg["agents"][0]["max_view_distance"]),
                         help="max view distance of agent",
                     )
 
@@ -199,7 +199,7 @@ class StreamlitApp:
                         "Focal Length",
                         min_value=1,
                         max_value=30,
-                        value=env_cfg["agents"][0]["focal_length"],
+                        value=task_cfg["agents"][0]["focal_length"],
                         help="max view distance of agent",
                     )
 
@@ -207,7 +207,7 @@ class StreamlitApp:
                         label="Step Size",
                         min_value=0.01,
                         max_value=2.0,
-                        value=env_cfg["agents"][0]["step_size"],
+                        value=task_cfg["agents"][0]["step_size"],
                         help="agent step size",
                     )
                     submit_form = st.form_submit_button(
@@ -215,16 +215,14 @@ class StreamlitApp:
                     )
 
                 if submit_form:
-                    agent_config = env_cfg["agents"][0]
-                    agent_config.update(
+                    task_cfg["agents"][0].update(
                         {
                             "focal_length": focal_length,
                             "max_view_distance": max_view_distance,
                             "step_size": step_size,
                         }
                     )
-                    env_cfg.update({"agents": [agent_config]})
-                    scene_response = await update_config_callback(session, env_cfg)
+                    scene_response = await update_config_callback(session, task_cfg)
 
             # Prompting Box
             scene_response = None
@@ -232,25 +230,23 @@ class StreamlitApp:
                 if prompt := st.chat_input("Prompt"):
                     # with st.chat_message("user"):
                     #     st.markdown(prompt)
-                    new_message = {"role": "user", "content": prompt}
+                    new_message = {"role": "system", "content": prompt}
                     st.session_state.chat_messages.append(new_message)
                     scene_response = await send_chat_message(session, new_message)
-                    print("scene_response*********")
-                    print(scene_response)
                     if scene_response:
-                        system_response = scene_response["feedback"][3]["n"]
+                        system_response = scene_response["state"]
                         if type(system_response) == dict:
                             system_response = [system_response]
 
                         message = []
                         st_logger.info(system_response)
                         for response in system_response:
-                            message.append((response["agent"], response["response"]))
+                            message.append((response["agent"], response["feedback"]))
 
                         message = ", ".join([f"{m[0]}: {m[1]}" for m in message])
 
                         st.session_state.chat_messages.append(
-                            {"role": "system", "content": message}
+                            {"role": "user", "content": message}
                         )
 
             with c2:
@@ -314,8 +310,8 @@ class StreamlitApp:
                             st_logger.info(scene_response["feedback"])
                             st.session_state.chat_messages.append(
                                 {
-                                    "role": "system",
-                                    "content": scene_response["feedback"][3][
+                                    "role": "user",
+                                    "content": scene_response["feedback"]["state"][
                                         "feedback"
                                     ],
                                 }

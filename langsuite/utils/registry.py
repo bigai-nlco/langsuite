@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 from __future__ import annotations
 
-from typing import Text
+from typing import Optional, Text
 
 
 class Registry:
@@ -19,7 +19,7 @@ class Registry:
 
         self._obj_map[name.upper()] = obj
 
-    def register(self, obj=None, name: Text = None) -> None:
+    def register(self, obj=None, name: Optional[Text] = None):
         if obj is None:
 
             def deco(func_or_class, name=name):

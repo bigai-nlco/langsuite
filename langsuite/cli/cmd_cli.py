@@ -1,13 +1,19 @@
 # Copyright (c) BIGAI Research. All rights reserved.
 # Licensed under the MIT license.
 from __future__ import annotations
+from email import message
 
 import json
 import logging
 import os
 from pathlib import Path
+from sys import stdout
+from typing import Any
 
 from rich.console import Console
+from rich.logging import RichHandler
+
+from langsuite.suit import Message
 
 WELCOME_MSG = """
         __                      _____       _ __        ______
@@ -41,109 +47,65 @@ class CMDClient:
     Colors: https://rich.readthedocs.io/en/stable/appendix/colors.html
     """
 
-    console_cfg = dict(soft_wrap=True, markup=False, emoji=False, highlight=True)
+    console_cfg: dict[str, Any] = dict(soft_wrap=True, markup=False, emoji=False, highlight=True)
 
-    def __init__(self, *, log_level: int = logging.DEBUG, log_file=None) -> None:
-        self.log_level = log_level
+    def __init__(self, *, log_level: int = logging.INFO, log_file=None, verbose=False) -> None:
+        super().__init__()
+        self._cmd_log_file = None
         if log_file and len(log_file) > 0:
-            log_dir = Path(log_file).parent
-            if not os.path.exists(log_dir):
-                os.makedirs(log_dir, exist_ok=True)
-            log_file = open(log_file, "w")
-            self.console = Console(**CMDClient.console_cfg)
-        else:
-            self.console = Console(**CMDClient.console_cfg)
+            self.set_file(log_file)
+        self._console = Console(**CMDClient.console_cfg)
+        self._handler = RichHandler(console=self._console)
+        self._handler.setLevel(log_level)
+        
+        self.cache = []
+        self.verbose = verbose
 
-        self._cmd_log_file = log_file
-
-    def set_cmd_log_file(self, log_file):
+    def set_file(self, log_file):
         if self._cmd_log_file:
             self._cmd_log_file.close()
         log_dir = Path(log_file).parent
-        os.makedirs(log_dir, exist_ok=True)
-        self._cmd_log_file = open(log_file, "w+", encoding="utf-8")
-
-    def reset(self):
-        self.clear()
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir, exist_ok=True)
+        log_file = open(log_file, "w", encoding="utf-8")
+        self._cmd_log_file = log_file
+        
+    def print(self, message='', **kwargs):
+        if not self.verbose:
+            self._console.print(message, **kwargs)
 
     def clear(self):
-        self.console.clear()
+        if not self.verbose:
+            self._console.clear()
 
-    def close(self):
-        self.console.print()
-        self.console.print("Bye!", style="bold yellow")
+    def end_task(self):
+        self.print()
+        self.print("Bye!", style="bold yellow")
         if self._cmd_log_file:
             self._cmd_log_file.close()
 
-    def info(self, message: str):
-        if self.log_level <= logging.INFO:
-            self.console.log("[INFO] ", style="bold", end="")
-            self.console.print(message)
-
-    def error(self, message: str):
-        if self.log_level <= logging.ERROR:
-            self.console.log("[ERROR] ", style="bold red", end="")
-            self.console.print(message)
-
-    def debug(self, message: str):
-        if self.log_level <= logging.DEBUG:
-            self.console.log("[DEBUG] ", style="bold bright_black", end="")
-            self.console.print(message)
-
-    def warn(self, message: str):
-        if self.log_level <= logging.WARNING:
-            self.console.log("[WARNING] ", style="bold yellow", end="")
-            self.console.print(message)
-
-    def step(self, message=None, user_input: bool = False, stream=False):
-        """
-        Args:
-            message: dict(
-                role: ["system"|"assistant"],
-                content: str,
-                name: str,
-                action: str
-            )
-
-            stream: bool or Generator
-        """
-
+    def agent_step(self, message: Message, user_input = False, stream=False):
         try:
-            if message:
-                if type(message) == list:
-                    for msg in message:
-                        self.step(msg, user_input=False, stream=stream)
+            if message.role in {"system", "function"}:
+                if message.to:
+                    self.print(
+                        f"System (→ name): ",
+                        style="bold cyan",
+                        end="",
+                    )
                 else:
-                    if type(message) == str:
-                        message = {"role": "system", "content": message}
-
-                    if message["role"] == "system":
-                        if len(message.get("to", "")) > 0:
-                            self.console.print(
-                                f"System (→ {message['to']}): ",
-                                style="bold cyan",
-                                end="",
-                            )
-                        else:
-                            self.console.print("System: ", style="bold cyan", end="")
-                        self.console.print(message["content"])
-                    elif message["role"] == "assistant":
-                        if stream:
-                            self.render_chatbot(
-                                stream,
-                                name=message.get("name", "Robot"),
-                                action=message.get("action", "chat"),
-                            )
-                        else:
-                            self.render_chatbot(
-                                message["content"],
-                                name=message.get("name", "Robot"),
-                                action=message.get("action", "chat"),
-                            )
-                    if self._cmd_log_file:
-                        self._cmd_log_file.write(
-                            json.dumps(message, sort_keys=True) + "\n"
-                        )
+                    self.print("System: ", style="bold cyan", end="")
+                self.print(message.stripped_content)
+            elif message.role == "assistant":
+                self.render_chatbot(
+                    message.stripped_content,
+                    name=message.name,
+                    action=message.action,
+                )
+            if self._cmd_log_file:
+                self._cmd_log_file.write(
+                    json.dumps(message.dump_dict, sort_keys=True) + "\n"
+                )
             if user_input:
                 inp = self.user_input()
                 if self._cmd_log_file:
@@ -154,70 +116,52 @@ class CMDClient:
 
                 return inp
         except (KeyboardInterrupt, EOFError) as ex:
-            raise GameEndException()
+            raise GameEndException()        
+
+    def env_step(self):
+        pass
 
     def print_help(self):
-        self.console.print("Help Info:")
-        self.console.print('"Ctrl + C" or "Ctrl + D" to exit.')
-        self.console.rule("Commands", style="bold yellow")
+        self.print("Help Info:")
+        self.print('"Ctrl + C" or "Ctrl + D" to exit.')
+        self._console.rule("Commands", style="bold yellow")
         for k, h in HELP_MSG:
-            self.console.print(" " * 4 + "{:15}\t{:60}".format(k, h))
-        self.console.rule(".", style="bold yellow")
-
-    def cmd_input(self):
-        try:
-            cmd_msg = self.console.input(prompt="> ")
-        except UnicodeDecodeError as ex:
-            self.console.print_exception(show_locals=True)
-            self.error(
-                f"Invalid input. Got UnicodeDecodeError: {ex}\nPlease try again."
-            )
-        except KeyboardInterrupt:
-            raise GameEndException()
-
-        cmd = cmd_msg.strip().split(" ")
-        if cmd[0].upper() == "LOAD":
-            pass
-        elif cmd[0].upper() == "HELP":
-            self.print_help()
-        else:
-            raise NotImplementedError
-
-        cmd[0] = cmd[0].upper()
-        return cmd
+            self.print(" " * 4 + "{:15}\t{:60}".format(k, h))
+        self._console.rule(".", style="bold yellow")
 
     def user_input(self):
         try:
-            self.console.print("User: ", style="bold green", end="")
-            user_msg = self.console.input()
+            self.print("User: ", style="bold green", end="")
+            user_msg = self._console.input()
+            return user_msg
         except UnicodeDecodeError as ex:
-            self.error(
+            self.print(
                 f"Invalid input. Got UnicodeDecodeError: {ex}\nPlease try again."
             )
-        return user_msg
+        return self.user_input()
 
-    def start(self):
-        self.console.print(WELCOME_MSG)
+    def reset(self):
+        self.clear()
+        self.print(WELCOME_MSG)
 
     def render_chatbot(
         self, generator, name="Bot", action="chat", to="", stream: bool = True
     ):
         action = action.lower()
         if action == "chat" and len(to) > 0:
-            self.console.print(f"Assistant ({name} → {to})", style="bold blue", end="")
+            self.print(f"Assistant ({name} → {to})", style="bold blue", end="")
         else:
-            self.console.print(f"Assistant ({name})", style="bold blue", end="")
+            self.print(f"Assistant ({name})", style="bold blue", end="")
         if action == "thought":
-            self.console.print(" THOUGHT", style="bold yellow", end="")
+            self.print(" THOUGHT", style="bold yellow", end="")
         elif action == "act":
-            self.console.print(" ACT", style="bold cyan", end="")
+            self.print(" ACT", style="bold cyan", end="")
         elif action != "chat":
             raise ValueError(f"Unknown action type: {action}")
-        self.console.print(": ", style="bold blue", end="")
+        self.print(": ", style="bold blue", end="")
         if type(generator) == str:
-            self.console.print(generator)
-
+            self.print(generator)
 
 if __name__ == "__main__":
     cmd = CMDClient()
-    cmd.start()
+    cmd.reset()

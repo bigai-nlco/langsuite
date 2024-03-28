@@ -1,3 +1,2 @@
-from langsuite.agents.api_agent import ChatGPTAgent
-from langsuite.agents.base_agent import Agent
-from langsuite.agents.simple_agent import SimpleAgent
+from langsuite.agents.chat_agent import ChatAgent
+from langsuite.agents.expert_agent import ExpertAgent

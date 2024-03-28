@@ -4,26 +4,36 @@ from datetime import datetime
 
 import uvicorn
 from fastapi import FastAPI, Request
+from langsuite.suit.agent import LangSuiteAgent
+from langsuite.suit.task import LangsuiteTask
 
 from langsuite.utils.logging import logger
 
 
-def serve(env, *args):
+def serve(task: LangsuiteTask, *args):
     app = FastAPI()
+
+    #HACK
+    def _get_first_agent() -> LangSuiteAgent:
+        return next(iter(task.env.agents.values()))
 
     @app.get("/")
     async def root(req: Request):
         req_info = await req.body()
 
-        if state := env.get_task_info():
-            logger.info(state)
-            return {
-                "status_code": 200,
-                "timestamp": datetime.timestamp(datetime.now()),
-                "request": req_info,
-                "data": [],
-                "feedback": state,
-            }
+        state = {
+            "state": dict(
+                success=True, feedback=task.task_description
+            )
+        }
+        logger.info(state)
+        return {
+            "status_code": 200,
+            "timestamp": datetime.timestamp(datetime.now()),
+            "request": req_info,
+            "data": [],
+            "feedback": state,
+        }
 
     @app.get("/fetch/scene")
     async def handle_request_fetch_scene(req: Request):
@@ -31,7 +41,7 @@ def serve(env, *args):
 
         # action = req_info.get("action")
         # if action == "fetch_scene":
-        figure = env.render(mode="webui")
+        figure = task.env.world.render()
 
         return {
             "status_code": 200,
@@ -50,10 +60,7 @@ def serve(env, *args):
             "timestamp": datetime.timestamp(datetime.now()),
             "request": req_info,
             "data": {
-                "config": {
-                    "env": env.cfg,
-                    "agents": [agent.get_config() for (_, agent) in env.agents.items()],
-                }
+                "config": task.cfg
             },
         }
 
@@ -62,9 +69,9 @@ def serve(env, *args):
         req_info = await req.json()
 
         config = req_info.get("config")
-        # if action == "fetch_scene":
-        env.update_config(config)
-        figure = env.render(mode="webui")
+        #HACK
+        _get_first_agent().update_config(config)
+        figure = task.env.world.render()
 
         return {
             "status_code": 200,
@@ -79,9 +86,10 @@ def serve(env, *args):
 
         action = req_info.get("action")
         # if action == "fetch_scene":
-        if state := env.step({"action": action}):
+        #if state := env.step(action=action):
+        if state := task.env.agents[task.env.agents[0]].step(action=action):
             figure = env.render(mode="webui")
-            logger.info(state)
+        #    logger.info(state)
 
             return {
                 "status_code": 200,
@@ -93,7 +101,7 @@ def serve(env, *args):
                 },
             }
         else:
-            logger.info(state)
+        #    logger.info(state)
             return {
                 "status_code": 500,
                 "timestamp": datetime.timestamp(datetime.now()),
@@ -108,8 +116,7 @@ def serve(env, *args):
         message = req_info.get("message")
         logger.info(message)
         # if action == "fetch_scene":
-        
-        if state := env.step({"action": message["content"]}):
+        if state := env.step(message=message):
             figure = env.render(mode="webui")
             logger.info(state)
 

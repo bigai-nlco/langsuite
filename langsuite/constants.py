@@ -10,7 +10,7 @@ WORKSPACE_PATH = Path(__file__).parent.parent.absolute()
 
 # https://drafts.csswg.org/css-color-4/#named-colors
 CSS4_COLORS = {
-    "aliceblue": "#F0F8FF",
+#    "aliceblue": "#F0F8FF",
     "antiquewhite": "#FAEBD7",
     "aqua": "#00FFFF",
     "aquamarine": "#7FFFD4",

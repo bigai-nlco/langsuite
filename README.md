@@ -24,6 +24,7 @@
 
 ## Table of Contents
 - [🔍 Overview](#overview)
+- [⚠️ Upgrade Warning !!!](#warning)
 - [📦 Benchmark and Dataset](#-benchmark-and-dataset)
 - [🛠 Getting Started](#-getting-started)
   - [Installation](#installation)
@@ -33,6 +34,20 @@
 - [📝 Citation](#-citation)
 - [📄 Acknowledgements](#-acknowledgements)
 
+## ⚠️ Upgrade Warning !!!
+
+We are currently refactoring and upgrading LangSuit·E. As of now, the following features are *temporarily* offline. If you have an urgent need, you can find our old version in the [dev branch](https://github.com/bigai-nlco/langsuite/tree/dev). If you discover any bugs in the new version or wish for us to prioritize certain features, feel free to tell us in the issues.
+
+Below is our priority list:
+
+- [] Support goto action (which will allow full high-level planning. Current version do not contain it because we find some bugs in the new implementation.)
+- [] Support interactive WebUI (currently WebUI can render the picture of scene, but do not support interactive actions)
+- [] Support Gymnasium API (will provide better support for BabyAI and more tasks)
+- [] Refactored Expert Agent for IQA, Rearrenage and BabyAI. 
+- [] More deeply integration with LangChain
+- [] Support multi-room and multi-agent (TEACh and CWAH need it)
+- [] Better support for ai2thor and procthor based tasks
+- [] Support VirtualHome format (CWAH need it)
 
 ## 📦 Benchmark and Dataset
 
@@ -174,30 +189,20 @@ The user inferface will run on http://localhost:8501/
 
 ### Task Configuration
 ```yaml
-task: ExampleTask:Procthor2DEnv
-template: ./langsuite/envs/ai2thor/templates/procthor_rearrange.json
+task: AlfredTask_V0
 
-env:
-  type: Procthor2DEnv
+template: ./templates/alfred/alfred_react.json
 
 world:
-  type: ProcTHORWorld
-  id: test_world
-  grid_size: 0.25
-  asset_path: ./data/asset-database.json
-  metadata_path: ./data/ai2thor-object-metadata.json
-  receptacles_path: ./data/receptacles.json
 
 agents:
-  - type: ChatGPTAgent
-    position: 'random'
-    inventory_capacity: 1
+  - type: ChatAgent
+    inventory_capacity: 5
     focal_length: 10
-    max_manipulate_distance: 1
+    max_manipulate_distance: 2
     max_view_distance: 2
     step_size: 0.25
-    llm:
-      llm_type: ChatOpenAI
+
 ```
 
 ### Prompt Template
@@ -205,12 +210,12 @@ agents:
 {
     "intro": {
         "default": [
-            "You are an autonomous intelligent agent tasked with navigating a vitual home. You will be given a household task. These tasks will be accomplished through the use of specific actions you can issue. [...]"
+            "As an autonomous intelligent agent, you are now navigating a virtual home, and your task is to perform household tasks using specific actions. You will have access to the following information:  ..."
         ]
     },
     "example": {
         "default": [
-            "Task: go to the red box. \nObs:You can see a blue key in front of you; You can see a red box on your right. \nManipulable object: A blue key.\n>Act: turn_right."
+            "Task: put a clean lettuce in diningtable.\nObs: In front of you, You see a stoveburner_2. On your left, you see a stoveburner_1; a sinkbasin_1. On your right, you see a countertop_1; a tomato_0; a toaster_0.\n> Act: turn_left ..."
         ]
     },
     "InvalidAction": {
@@ -228,7 +233,7 @@ agents:
 If you find our work useful, please cite
 ```bibtex
 @misc{langsuite2023,
-  author    = {Zilong Zheng, Zixia Jia,  Mengmeng Wang, Wentao Ding, Baichen Tong, Songchun Zhu},
+  author    = {Zilong Zheng, Zixia Jia, Mengmeng Wang, Wentao Ding, Baichen Tong, Songchun Zhu},
   title     = {LangSuit⋅E: Controlling, Planning, and Interacting with Large Language Models in Embodied Text Environments},
   year      = {2023},
   publisher = {GitHub},

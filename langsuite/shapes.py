@@ -1,22 +1,25 @@
 # Copyright (c) BIGAI Research. All rights reserved.
 # Licensed under the MIT license.
 from __future__ import annotations
+from abc import abstractmethod
 
 import math
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union
 
 import numpy as np
+from overrides import override
 import shapely.affinity
 from shapely import LineString, MultiLineString, Point, Polygon
-
+from shapely.geometry.base import BaseGeometry
 
 class Geometry:
-    def __init__(self) -> None:
-        self.shapey_geo = None
-
+    @property
+    @abstractmethod
+    def shapely_geo(self) -> BaseGeometry:
+        pass
+    
     def __repr__(self) -> str:
         return ""
-
 
 class Point2D(Geometry):
     def __init__(self, *args) -> None:
@@ -35,8 +38,13 @@ class Point2D(Geometry):
                 )
         else:
             raise TypeError("Point2D takes at least 1 argument")
-        self.shapely_geo = Point(self.x, self.y)
+        self._shapely_geo = Point(self.x, self.y)
 
+    @property
+    @override
+    def shapely_geo(self) -> BaseGeometry:
+        return self._shapely_geo
+    
     @property
     def modulus(self) -> float:
         return math.sqrt(self.x**2 + self.y**2)
@@ -64,7 +72,7 @@ class Point2D(Geometry):
         return f"({self.x}, {self.y})"
 
     def to_wkt(self) -> str:
-        return self.shapely_geo.wkt
+        return self._shapely_geo.wkt
 
     def to_numpy(self) -> np.ndarray:
         return np.array([self.x, self.y], dtype=np.float32)
@@ -81,51 +89,65 @@ class Point2D(Geometry):
         if isinstance(center, Point2D):
             center = (center.x, center.y)
         # TODO
-        self.shapely_geo = shapely.affinity.rotate(
-            self.shapely_geo, angle, center, use_radians
+        self._shapely_geo = shapely.affinity.rotate(
+            self._shapely_geo, angle, center, use_radians
         )
-        self.x = self.shapely_geo.x
-        self.y = self.shapely_geo.y
+        self.x = self._shapely_geo.x
+        self.y = self._shapely_geo.y
 
 
 class Line2D(Geometry):
     def __init__(self, coords: List[Union[Point2D, Tuple[float, float]]]):
         self.coords = [Point2D(c) for c in coords]
-        self.shapely_geo = LineString([c.shapely_geo for c in self.coords])
+        self._shapely_geo = LineString([c._shapely_geo for c in self.coords])
 
     def rotate(self, angle):
-        self.shapely_geo = shapely.affinity.rotate(
+        self._shapely_geo = shapely.affinity.rotate(
             self.shapely_geo, angle, origin="center", use_radians=False
         )
+
+    @property
+    @override
+    def shapely_geo(self) -> BaseGeometry:
+        return self._shapely_geo
 
 
 class Vector2D(Point2D):
     def __init__(self, *args):
         super().__init__(*args)
-        self.shapely_geo = LineString([(0, 0), (self.x, self.y)])
+        self._shapely_geo = LineString([(0, 0), (self.x, self.y)])
 
     def rotate(self, angle, use_radians=False):
         # TODO -angle
         new_point = shapely.affinity.rotate(
             Point(self.x, self.y), -angle, (0, 0), use_radians
         )
-        self.shapely_geo = LineString([(0, 0), new_point])
+        self._shapely_geo = LineString([(0, 0), new_point])
         self.x = new_point.x
         self.y = new_point.y
 
+    @property
+    @override
+    def shapely_geo(self) -> BaseGeometry:
+        return self._shapely_geo
 
 class Polygon2D(Geometry):
     def __init__(
         self,
-        coords: List[Union[Point2D, Tuple[float, float]]],
+        coords: Union[Polygon, Sequence[Union[Point2D, Tuple[float, float]]]],
         holes: Optional[List[Union[Point2D, Tuple[float, float]]]] = None,
     ) -> None:
-        self.coords = [Point2D(c) for c in coords]
-        self.holes = [] if holes is None else [Point2D(c) for c in holes]
-        self.shapely_geo = Polygon(
-            shell=[c.shapely_geo for c in self.coords],
-            holes=[c.shapely_geo for c in self.holes],
-        )
+        if isinstance(coords, Polygon):
+            self._shapely_geo = coords
+            self.coords = [Point2D(c) for c in coords.exterior.coords]
+            self.holes = [Point2D(c) for c in coords.interiors]
+        else:
+            self.coords = [Point2D(c) for c in coords]
+            self.holes = [] if holes is None else [Point2D(c) for c in holes]
+            self._shapely_geo = Polygon(
+                shell=[c._shapely_geo for c in self.coords],
+                holes=[c._shapely_geo for c in self.holes],
+            )
 
     def __repr__(self) -> str:
         return "{" + ", ".join([str(c) for c in self.coords]) + "}"
@@ -180,7 +202,7 @@ class Polygon2D(Geometry):
         """
         if isinstance(origin, Point2D):
             origin = (origin.x, origin.y)
-        self.shapely_geo = shapely.affinity.rotate(
+        self._shapely_geo = shapely.affinity.rotate(
             self.shapely_geo, angle, origin, use_radians
         )
         self.coords = [Point2D(c) for c in self.shapely_geo.exterior.coords]
@@ -217,6 +239,11 @@ class Polygon2D(Geometry):
             )
         return self.shapely_geo.contains(other.shapely_geo)
 
+    @property
+    @override
+    def shapely_geo(self) -> BaseGeometry:
+        return self._shapely_geo
+
 
 class Box2D(Polygon2D):
     def __init__(self, *args) -> None:
@@ -241,6 +268,11 @@ class Box2D(Polygon2D):
     def __repr__(self) -> str:
         return f"({self.ul}, {self.br})"
 
+    @property
+    @override
+    def shapely_geo(self) -> BaseGeometry:
+        return self._shapely_geo
+
 
 class Cone2D(Polygon2D):
     def __init__(
@@ -261,7 +293,7 @@ class Cone2D(Polygon2D):
         (
             self.left_vector,
             self.right_vector,
-            self.shapely_geo,
+            self._shapely_geo,
         ) = self._create_shapely_geo()
         self.coords = [Point2D(c) for c in self.shapely_geo.exterior.coords]
 
@@ -289,6 +321,12 @@ class Cone2D(Polygon2D):
 
     def rotate(self, angle, use_radians=False):
         return super().rotate(angle, self.center, use_radians)
+
+    @property
+    @override
+    def shapely_geo(self) -> BaseGeometry:
+        return self._shapely_geo
+
 
     @property
     def centroid(self) -> Point2D:
