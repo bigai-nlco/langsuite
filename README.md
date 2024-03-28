@@ -40,14 +40,14 @@ We are currently refactoring and upgrading LangSuit·E. As of now, the following
 
 Below is our priority list:
 
-- [] Support goto action (which will allow full high-level planning. Current version do not contain it because we find some bugs in the new implementation.)
-- [] Support interactive WebUI (currently WebUI can render the picture of scene, but do not support interactive actions)
-- [] Support Gymnasium API (will provide better support for BabyAI and more tasks)
-- [] Refactored Expert Agent for IQA, Rearrenage and BabyAI. 
-- [] More deeply integration with LangChain
-- [] Support multi-room and multi-agent (TEACh and CWAH need it)
-- [] Better support for ai2thor and procthor based tasks
-- [] Support VirtualHome format (CWAH need it)
+- [ ] Support goto action (which will allow full high-level planning. Current version do not contain it because we find some bugs in the new implementation.)
+- [ ] Support interactive WebUI (currently WebUI can render the picture of scene, but do not support interactive actions)
+- [ ] Support Gymnasium API (will provide better support for BabyAI and more tasks)
+- [ ] Refactored Expert Agent for IQA, Rearrenage and BabyAI. 
+- [ ] More deeply integration with LangChain
+- [ ] Support multi-room and multi-agent (TEACh and CWAH need it)
+- [ ] Better support for AI2-THOR and ProcTHOR based tasks
+- [ ] Support VirtualHome format (CWAH need it)
 
 ## 📦 Benchmark and Dataset
 
