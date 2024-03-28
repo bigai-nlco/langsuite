@@ -1,0 +1,24 @@
+task: IqaTask:Iqa2DEnv
+template: ./langsuite/envs/iqa/templates/iqa.json
+
+env:
+  type: Iqa2DEnv
+
+
+world:
+  type: IqaWorld
+  id: iqa_world
+  grid_size: 0.25
+
+
+agents:
+  - type: IqaExpertAgent
+    position: 'random'
+    inventory_capacity: 1
+    focal_length: 10
+    max_manipulate_distance: 2
+    max_view_distance: 2
+    step_size: 0.25
+    view_degree: 60
+
+question_type: 0

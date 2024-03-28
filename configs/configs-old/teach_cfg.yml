@@ -1,0 +1,38 @@
+task: TeachTask:Teach2DEnv
+template: ./langsuite/envs/teach/templates/teach.json
+# isExpert: true
+isExpert: false
+env:
+  type: Teach2DEnv
+
+world:
+  type: TeachWorld
+  id: test_Teach_world
+  grid_size: 0.25
+  floor_plan_path: ./data/alfred/floor_plan2polygons.json
+  floor_plan_controlled_objects_path: ./data/alfred/floor_plan_controlled_objects.json
+
+
+agents:
+  - type: TeachAgent
+    agent_id: 0
+    agent_name: 'commander'
+    position: 'random'
+    inventory_capacity: 0
+    focal_length: 10
+    max_manipulate_distance: 0
+    max_view_distance: 10
+    step_size: 0.25
+    llm:
+      llm_type: "ChatOpenAI"
+  - type: TeachAgent
+    agent_id: 1
+    agent_name: 'follower'
+    position: 'random'
+    inventory_capacity: 1
+    focal_length: 10
+    max_manipulate_distance: 2
+    max_view_distance: 2
+    step_size: 0.25
+    llm:
+      llm_type: "ChatOpenAI"

@@ -1,0 +1,521 @@
+{
+    "FloorPlan321": {},
+    "FloorPlan13": {
+        "StoveKnob|-02.51|+01.10|+01.56": [
+            "StoveBurner|-02.47|+00.92|+01.71"
+        ],
+        "StoveKnob|-02.79|+01.10|+01.56": [
+            "StoveBurner|-02.92|+00.92|+01.71"
+        ],
+        "StoveKnob|-02.97|+01.10|+01.56": [
+            "StoveBurner|-02.92|+00.92|+02.01"
+        ],
+        "StoveKnob|-02.35|+01.10|+01.56": [
+            "StoveBurner|-02.47|+00.92|+02.01"
+        ]
+    },
+    "FloorPlan28": {
+        "StoveKnob|-00.62|+00.90|-01.83": [
+            "StoveBurner|-00.44|+00.92|-01.85"
+        ],
+        "StoveKnob|-00.62|+00.90|-02.29": [
+            "StoveBurner|-00.44|+00.92|-02.24"
+        ],
+        "StoveKnob|-00.62|+00.90|-01.98": [
+            "StoveBurner|-00.22|+00.92|-01.85"
+        ],
+        "StoveKnob|-00.62|+00.90|-02.13": [
+            "StoveBurner|-00.22|+00.92|-02.24"
+        ]
+    },
+    "FloorPlan313": {},
+    "FloorPlan201": {},
+    "FloorPlan407": {},
+    "FloorPlan329": {},
+    "FloorPlan206": {},
+    "FloorPlan215": {},
+    "FloorPlan17": {
+        "StoveKnob|+00.78|+01.09|-00.91": [
+            "StoveBurner|+00.80|+00.93|-00.74"
+        ],
+        "StoveKnob|+00.43|+01.09|-00.91": [
+            "StoveBurner|+00.50|+00.93|-00.47"
+        ],
+        "StoveKnob|+00.89|+01.09|-00.91": [
+            "StoveBurner|+00.80|+00.93|-00.47"
+        ],
+        "StoveKnob|+00.55|+01.09|-00.91": [
+            "StoveBurner|+00.50|+00.93|-00.74"
+        ]
+    },
+    "FloorPlan322": {},
+    "FloorPlan225": {},
+    "FloorPlan22": {
+        "StoveKnob|-02.43|+00.86|-00.32": [
+            "StoveBurner|-02.62|+00.89|-00.40"
+        ],
+        "StoveKnob|-02.43|+00.86|-00.62": [
+            "StoveBurner|-02.82|+00.89|-00.71"
+        ],
+        "StoveKnob|-02.43|+00.86|-00.48": [
+            "StoveBurner|-02.82|+00.89|-00.40"
+        ],
+        "StoveKnob|-02.43|+00.86|-00.78": [
+            "StoveBurner|-02.62|+00.89|-00.71"
+        ]
+    },
+    "FloorPlan9": {
+        "StoveKnob|+00.34|+01.09|+01.56": [
+            "StoveBurner|+00.28|+00.92|+01.35"
+        ],
+        "StoveKnob|+00.75|+01.09|+01.56": [
+            "StoveBurner|+00.68|+00.92|+01.08"
+        ],
+        "StoveKnob|+00.19|+01.09|+01.56": [
+            "StoveBurner|+00.28|+00.92|+01.08"
+        ],
+        "StoveKnob|+00.59|+01.09|+01.56": [
+            "StoveBurner|+00.68|+00.92|+01.35"
+        ]
+    },
+    "FloorPlan6": {
+        "StoveKnob|+01.88|+01.09|-00.44": [
+            "StoveBurner|+01.41|+00.92|-00.34"
+        ],
+        "StoveKnob|+01.88|+01.09|-00.31": [
+            "StoveBurner|+01.69|+00.92|-00.34"
+        ],
+        "StoveKnob|+01.88|+01.09|+00.15": [
+            "StoveBurner|+01.41|+00.92|+00.06"
+        ],
+        "StoveKnob|+01.88|+01.09|+00.02": [
+            "StoveBurner|+01.69|+00.92|+00.06"
+        ]
+    },
+    "FloorPlan7": {
+        "StoveKnob|+01.34|+00.91|-01.24": [
+            "StoveBurner|+01.33|+00.96|-01.42"
+        ],
+        "StoveKnob|+00.96|+00.91|-01.24": [
+            "StoveBurner|+00.97|+00.96|-01.42"
+        ],
+        "StoveKnob|+01.21|+00.91|-01.24": [
+            "StoveBurner|+01.33|+00.96|-01.69"
+        ],
+        "StoveKnob|+01.09|+00.91|-01.24": [
+            "StoveBurner|+00.97|+00.96|-01.69"
+        ]
+    },
+    "FloorPlan327": {},
+    "FloorPlan18": {
+        "StoveKnob|+01.14|+00.93|+04.31": [
+            "StoveBurner|+01.32|+00.98|+04.29"
+        ],
+        "StoveKnob|+01.14|+00.93|+04.14": [
+            "StoveBurner|+01.56|+00.98|+04.29"
+        ],
+        "StoveKnob|+01.14|+00.93|+03.99": [
+            "StoveBurner|+01.56|+00.98|+03.85"
+        ],
+        "StoveKnob|+01.14|+00.93|+03.82": [
+            "StoveBurner|+01.32|+00.98|+03.85"
+        ]
+    },
+    "FloorPlan27": {
+        "StoveKnob|+02.33|+01.09|+01.05": [
+            "StoveBurner|+01.86|+00.93|+01.11"
+        ],
+        "StoveKnob|+02.33|+01.09|+01.46": [
+            "StoveBurner|+02.14|+00.93|+01.50"
+        ],
+        "StoveKnob|+02.33|+01.09|+01.61": [
+            "StoveBurner|+01.87|+00.93|+01.50"
+        ],
+        "StoveKnob|+02.33|+01.09|+01.21": [
+            "StoveBurner|+02.14|+00.93|+01.11"
+        ]
+    },
+    "FloorPlan320": {},
+    "FloorPlan30": {
+        "StoveKnob|-00.37|+00.79|-00.72": [
+            "StoveBurner|-00.42|+00.90|-00.92"
+        ],
+        "StoveKnob|-00.18|+00.79|-00.92": [
+            "StoveBurner|-00.42|+00.90|-01.27"
+        ],
+        "StoveKnob|-00.09|+00.79|-01.01": [
+            "StoveBurner|-00.24|+00.90|-01.09"
+        ],
+        "StoveKnob|-00.28|+00.79|-00.82": [
+            "StoveBurner|-00.60|+00.90|-01.09"
+        ]
+    },
+    "FloorPlan317": {},
+    "FloorPlan423": {},
+    "FloorPlan428": {},
+    "FloorPlan303": {},
+    "FloorPlan323": {},
+    "FloorPlan306": {},
+    "FloorPlan224": {},
+    "FloorPlan418": {},
+    "FloorPlan402": {},
+    "FloorPlan315": {},
+    "FloorPlan415": {},
+    "FloorPlan23": {
+        "StoveKnob|-01.03|+01.08|-03.96": [
+            "StoveBurner|-01.13|+00.93|-03.50"
+        ],
+        "StoveKnob|-01.42|+01.08|-03.96": [
+            "StoveBurner|-01.52|+00.93|-03.75"
+        ],
+        "StoveKnob|-01.18|+01.08|-03.96": [
+            "StoveBurner|-01.13|+00.93|-03.75"
+        ],
+        "StoveKnob|-01.58|+01.08|-03.96": [
+            "StoveBurner|-01.52|+00.93|-03.50"
+        ]
+    },
+    "FloorPlan426": {},
+    "FloorPlan424": {},
+    "FloorPlan421": {},
+    "FloorPlan227": {},
+    "FloorPlan307": {},
+    "FloorPlan408": {},
+    "FloorPlan217": {},
+    "FloorPlan218": {},
+    "FloorPlan309": {},
+    "FloorPlan230": {},
+    "FloorPlan308": {},
+    "FloorPlan324": {},
+    "FloorPlan202": {},
+    "FloorPlan318": {},
+    "FloorPlan403": {},
+    "FloorPlan429": {},
+    "FloorPlan302": {},
+    "FloorPlan228": {},
+    "FloorPlan310": {},
+    "FloorPlan414": {},
+    "FloorPlan211": {},
+    "FloorPlan212": {},
+    "FloorPlan427": {},
+    "FloorPlan14": {
+        "StoveKnob|+01.36|+00.82|-00.32": [
+            "StoveBurner|+01.54|+00.91|-00.32"
+        ],
+        "StoveKnob|+01.36|+00.82|-00.18": [
+            "StoveBurner|+01.81|+00.91|-00.32"
+        ],
+        "StoveKnob|+01.36|+00.82|+00.09": [
+            "StoveBurner|+01.55|+00.91|+00.08"
+        ],
+        "StoveKnob|+01.36|+00.82|-00.05": [
+            "StoveBurner|+01.81|+00.91|+00.08"
+        ]
+    },
+    "FloorPlan214": {},
+    "FloorPlan410": {},
+    "FloorPlan1": {
+        "StoveKnob|-00.48|+00.88|-02.19": [
+            "StoveBurner|-00.47|+00.92|-02.37"
+        ],
+        "StoveKnob|-00.02|+00.88|-02.19": [
+            "StoveBurner|-00.04|+00.92|-02.37"
+        ],
+        "StoveKnob|-00.33|+00.88|-02.19": [
+            "StoveBurner|-00.47|+00.92|-02.58"
+        ],
+        "StoveKnob|-00.18|+00.88|-02.19": [
+            "StoveBurner|-00.04|+00.92|-02.58"
+        ]
+    },
+    "FloorPlan10": {
+        "StoveKnob|+00.67|+00.90|-01.52": [
+            "StoveBurner|+00.84|+00.92|-01.50"
+        ],
+        "StoveKnob|+00.67|+00.90|-01.37": [
+            "StoveBurner|+01.08|+00.92|-01.50"
+        ],
+        "StoveKnob|+00.67|+00.90|-01.24": [
+            "StoveBurner|+01.08|+00.92|-01.10"
+        ],
+        "StoveKnob|+00.67|+00.90|-01.09": [
+            "StoveBurner|+00.84|+00.92|-01.10"
+        ]
+    },
+    "FloorPlan207": {},
+    "FloorPlan328": {},
+    "FloorPlan205": {},
+    "FloorPlan319": {},
+    "FloorPlan24": {
+        "StoveKnob|+01.10|+01.00|+01.32": [
+            "StoveBurner|+00.64|+00.84|+01.38"
+        ],
+        "StoveKnob|+01.10|+01.00|+01.73": [
+            "StoveBurner|+00.91|+00.84|+01.77"
+        ],
+        "StoveKnob|+01.10|+01.00|+01.89": [
+            "StoveBurner|+00.64|+00.84|+01.77"
+        ],
+        "StoveKnob|+01.10|+01.00|+01.48": [
+            "StoveBurner|+00.91|+00.84|+01.38"
+        ]
+    },
+    "FloorPlan29": {
+        "StoveKnob|+00.39|+01.05|-01.22": [
+            "StoveBurner|+00.39|+01.04|-01.63"
+        ],
+        "StoveKnob|+00.25|+01.05|-01.22": [
+            "StoveBurner|+00.25|+01.05|-01.40"
+        ],
+        "StoveKnob|+00.09|+01.05|-01.22": [
+            "StoveBurner|+00.12|+01.04|-01.63"
+        ],
+        "StoveKnob|+00.00|+01.05|-01.22": [
+            "StoveBurner|+00.00|+01.05|-01.40"
+        ],
+        "StoveKnob|+00.49|+01.05|-01.22": [
+            "StoveBurner|+00.50|+01.05|-01.40"
+        ]
+    },
+    "FloorPlan204": {},
+    "FloorPlan220": {},
+    "FloorPlan325": {},
+    "FloorPlan8": {
+        "StoveKnob|-01.52|+01.10|-01.98": [
+            "StoveBurner|-01.43|+00.94|-01.53"
+        ],
+        "StoveKnob|-00.96|+01.10|-01.98": [
+            "StoveBurner|-01.08|+00.94|-01.53"
+        ],
+        "StoveKnob|-01.11|+01.10|-01.98": [
+            "StoveBurner|-01.08|+00.94|-01.81"
+        ],
+        "StoveKnob|-01.36|+01.10|-01.98": [
+            "StoveBurner|-01.43|+00.94|-01.81"
+        ]
+    },
+    "FloorPlan404": {},
+    "FloorPlan226": {},
+    "FloorPlan401": {},
+    "FloorPlan213": {},
+    "FloorPlan21": {
+        "StoveKnob|-02.06|+00.87|+00.52": [
+            "StoveBurner|-02.10|+00.89|+00.79"
+        ],
+        "StoveKnob|-01.60|+00.87|+00.52": [
+            "StoveBurner|-01.55|+00.89|+00.79"
+        ],
+        "StoveKnob|-01.75|+00.87|+00.52": [
+            "StoveBurner|-01.56|+00.89|+01.05"
+        ],
+        "StoveKnob|-01.90|+00.87|+00.52": [
+            "StoveBurner|-02.10|+00.89|+01.05"
+        ]
+    },
+    "FloorPlan4": {
+        "StoveKnob|-03.16|+01.05|+00.71": [
+            "StoveBurner|-03.00|+01.10|+00.23"
+        ],
+        "StoveKnob|-03.49|+01.05|+00.71": [
+            "StoveBurner|-03.48|+01.10|+00.23"
+        ],
+        "StoveKnob|-02.99|+01.05|+00.71": [
+            "StoveBurner|-03.00|+01.10|+00.48"
+        ],
+        "StoveKnob|-03.32|+01.05|+00.71": [
+            "StoveBurner|-03.48|+01.10|+00.48"
+        ]
+    },
+    "FloorPlan208": {},
+    "FloorPlan419": {},
+    "FloorPlan430": {},
+    "FloorPlan203": {},
+    "FloorPlan2": {
+        "StoveKnob|+01.60|+00.92|+00.46": [
+            "StoveBurner|+01.98|+00.90|+00.38"
+        ],
+        "StoveKnob|+01.60|+00.92|+00.68": [
+            "StoveBurner|+01.77|+00.90|+00.60"
+        ],
+        "StoveKnob|+01.60|+00.92|+00.74": [
+            "StoveBurner|+01.77|+00.90|+00.82"
+        ],
+        "StoveKnob|+01.60|+00.92|+00.63": [
+            "StoveBurner|+01.77|+00.90|+00.38"
+        ],
+        "StoveKnob|+01.60|+00.92|+00.57": [
+            "StoveBurner|+01.98|+00.90|+00.82"
+        ],
+        "StoveKnob|+01.60|+00.92|+00.52": [
+            "StoveBurner|+01.98|+00.90|+00.60"
+        ]
+    },
+    "FloorPlan312": {},
+    "FloorPlan222": {},
+    "FloorPlan26": {
+        "StoveKnob|-00.06|+01.09|+04.22": [
+            "StoveBurner|-00.54|+00.92|+04.27"
+        ],
+        "StoveKnob|-00.06|+01.09|+04.38": [
+            "StoveBurner|-00.25|+00.92|+04.27"
+        ],
+        "StoveKnob|-00.06|+01.09|+04.78": [
+            "StoveBurner|-00.54|+00.92|+04.67"
+        ],
+        "StoveKnob|-00.06|+01.09|+04.63": [
+            "StoveBurner|-00.25|+00.92|+04.67"
+        ]
+    },
+    "FloorPlan405": {},
+    "FloorPlan223": {},
+    "FloorPlan314": {},
+    "FloorPlan411": {},
+    "FloorPlan305": {},
+    "FloorPlan16": {
+        "StoveKnob|+01.93|+01.04|-01.51": [
+            "StoveBurner|+01.76|+01.02|-01.60"
+        ],
+        "StoveKnob|+02.02|+01.04|-01.59": [
+            "StoveBurner|+02.12|+01.02|-01.84"
+        ],
+        "StoveKnob|+01.93|+01.04|-01.59": [
+            "StoveBurner|+01.84|+01.02|-01.84"
+        ],
+        "StoveKnob|+02.02|+01.04|-01.51": [
+            "StoveBurner|+02.18|+01.02|-01.60"
+        ]
+    },
+    "FloorPlan219": {},
+    "FloorPlan301": {},
+    "FloorPlan209": {},
+    "FloorPlan409": {},
+    "FloorPlan216": {},
+    "FloorPlan11": {
+        "StoveKnob|+01.25|+00.91|+00.12": [
+            "StoveBurner|+01.36|+00.96|+00.56"
+        ],
+        "StoveKnob|+01.37|+00.91|+00.12": [
+            "StoveBurner|+01.36|+00.96|+00.29"
+        ],
+        "StoveKnob|+01.00|+00.91|+00.12": [
+            "StoveBurner|+01.01|+00.96|+00.29"
+        ],
+        "StoveKnob|+01.13|+00.91|+00.12": [
+            "StoveBurner|+01.01|+00.96|+00.56"
+        ]
+    },
+    "FloorPlan5": {
+        "StoveKnob|-00.87|+00.90|-00.83": [
+            "StoveBurner|-01.29|+00.95|-00.76"
+        ],
+        "StoveKnob|-00.87|+00.90|-00.68": [
+            "StoveBurner|-01.06|+00.95|-00.67"
+        ],
+        "StoveKnob|-00.87|+00.90|-00.97": [
+            "StoveBurner|-01.29|+00.95|-01.02"
+        ],
+        "StoveKnob|-00.87|+00.90|-01.12": [
+            "StoveBurner|-01.06|+00.95|-01.13"
+        ]
+    },
+    "FloorPlan311": {},
+    "FloorPlan12": {
+        "StoveKnob|-00.65|+00.93|+01.76": [
+            "StoveBurner|-01.11|+00.92|+01.87"
+        ],
+        "StoveKnob|-00.65|+00.93|+01.51": [
+            "StoveBurner|-01.11|+00.92|+01.47"
+        ],
+        "StoveKnob|-00.65|+00.93|+01.36": [
+            "StoveBurner|-00.83|+00.92|+01.47"
+        ],
+        "StoveKnob|-00.65|+00.93|+01.92": [
+            "StoveBurner|-00.83|+00.92|+01.87"
+        ]
+    },
+    "FloorPlan15": {
+        "StoveKnob|-03.60|+01.11|+02.43": [
+            "StoveBurner|-03.15|+00.96|+02.37"
+        ],
+        "StoveKnob|-03.60|+01.11|+01.87": [
+            "StoveBurner|-03.14|+00.96|+01.97"
+        ],
+        "StoveKnob|-03.60|+01.11|+02.27": [
+            "StoveBurner|-03.42|+00.96|+02.37"
+        ],
+        "StoveKnob|-03.60|+01.11|+02.02": [
+            "StoveBurner|-03.42|+00.96|+01.97"
+        ]
+    },
+    "FloorPlan413": {},
+    "FloorPlan3": {
+        "StoveKnob|-00.71|+01.34|-02.74": [
+            "StoveBurner|-00.75|+01.33|-02.97"
+        ],
+        "StoveKnob|-00.57|+01.34|-02.74": [
+            "StoveBurner|-00.63|+01.33|-03.30"
+        ],
+        "StoveKnob|-00.34|+01.34|-02.74": [
+            "StoveBurner|-00.24|+01.33|-03.30"
+        ],
+        "StoveKnob|-00.19|+01.34|-02.74": [
+            "StoveBurner|-00.13|+01.33|-02.97"
+        ]
+    },
+    "FloorPlan20": {
+        "StoveKnob|+02.04|+01.09|-00.65": [
+            "StoveBurner|+01.85|+00.94|-00.76"
+        ],
+        "StoveKnob|+02.04|+01.09|-00.25": [
+            "StoveBurner|+01.57|+00.94|-00.36"
+        ],
+        "StoveKnob|+02.04|+01.09|-00.41": [
+            "StoveBurner|+01.85|+00.94|-00.36"
+        ],
+        "StoveKnob|+02.04|+01.09|-00.82": [
+            "StoveBurner|+01.57|+00.94|-00.76"
+        ]
+    },
+    "FloorPlan425": {},
+    "FloorPlan221": {},
+    "FloorPlan330": {},
+    "FloorPlan19": {
+        "StoveKnob|-00.57|+00.90|-02.31": [
+            "StoveBurner|-00.17|+00.94|-02.45"
+        ],
+        "StoveKnob|-00.57|+00.90|-02.17": [
+            "StoveBurner|-00.17|+00.94|-02.03"
+        ],
+        "StoveKnob|-00.57|+00.90|-02.47": [
+            "StoveBurner|-00.38|+00.94|-02.45"
+        ],
+        "StoveKnob|-00.57|+00.90|-02.00": [
+            "StoveBurner|-00.38|+00.94|-02.03"
+        ]
+    },
+    "FloorPlan406": {},
+    "FloorPlan420": {},
+    "FloorPlan416": {},
+    "FloorPlan412": {},
+    "FloorPlan326": {},
+    "FloorPlan210": {},
+    "FloorPlan25": {
+        "StoveKnob|-00.07|+01.00|+02.02": [
+            "StoveBurner|-00.24|+00.82|+02.08"
+        ],
+        "StoveKnob|-00.07|+01.00|+02.17": [
+            "StoveBurner|-00.52|+00.82|+02.08"
+        ],
+        "StoveKnob|-00.07|+01.00|+01.77": [
+            "StoveBurner|-00.24|+00.82|+01.68"
+        ],
+        "StoveKnob|-00.07|+01.00|+01.61": [
+            "StoveBurner|-00.52|+00.82|+01.68"
+        ]
+    },
+    "FloorPlan304": {},
+    "FloorPlan316": {},
+    "FloorPlan422": {},
+    "FloorPlan417": {},
+    "FloorPlan229": {}
+}
