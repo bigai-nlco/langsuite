@@ -24,6 +24,7 @@
 
 ## Table of Contents
 - [🔍 Overview](#overview)
+- [⚠️ Upgrade Warning !!!](#warning)
 - [📦 Benchmark and Dataset](#-benchmark-and-dataset)
 - [🛠 Getting Started](#-getting-started)
   - [Installation](#installation)
@@ -33,6 +34,20 @@
 - [📝 Citation](#-citation)
 - [📄 Acknowledgements](#-acknowledgements)
 
+## ⚠️ Upgrade Warning !!!
+
+We are currently refactoring and upgrading LangSuit·E. As of now, the following features are *temporarily* offline. If you have an urgent need, you can find our old version in the [dev branch](https://github.com/bigai-nlco/langsuite/tree/dev). If you discover any bugs in the new version or wish for us to prioritize certain features, feel free to tell us in the issues.
+
+Below is our priority list:
+
+- [] Support goto action (which will allow full high-level planning. Current version do not contain it because we find some bugs in the new implementation.)
+- [] Support interactive WebUI (currently WebUI can render the picture of scene, but do not support interactive actions)
+- [] Support Gymnasium API (will provide better support for BabyAI and more tasks)
+- [] Refactored Expert Agent for IQA, Rearrenage and BabyAI. 
+- [] More deeply integration with LangChain
+- [] Support multi-room and multi-agent (TEACh and CWAH need it)
+- [] Better support for ai2thor and procthor based tasks
+- [] Support VirtualHome format (CWAH need it)
 
 ## 📦 Benchmark and Dataset
 
