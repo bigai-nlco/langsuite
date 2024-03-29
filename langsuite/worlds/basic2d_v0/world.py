@@ -488,7 +488,7 @@ class Basic2DWorld_V0(World):
         location,
         obj_collector: dict,
     ):
-        print(object_info)
+        # print(object_info)
         assets_id = object_info["assetId"]
         obj_id = object_info["objectId"]
         # use center instead of real pos is for using axis aligned bbox, don't change it.
