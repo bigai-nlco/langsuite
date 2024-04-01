@@ -49,6 +49,7 @@ class AlfredHandler(Basic2DHandler):
         if action_id == 'Stop':
             action_dict['task_type'] = self.task_type
             action_dict['target_status'] = self.target_status
+            args = ' [n/a]'
         if 'objectId' in action['api_action']:
             object_id = action['api_action']['objectId']
             action_dict['object_id'] = object_id
@@ -58,8 +59,9 @@ class AlfredHandler(Basic2DHandler):
                 args = f' [{object_id}, {receptacle_id}]'
             else:
                 args = f' [{object_id}]'
-            
+
         content = f'act: {action_name}{args}'
+        
         message = Message(
             role='assistant',
             raw_content=content,

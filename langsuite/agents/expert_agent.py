@@ -2,11 +2,13 @@ from ast import parse
 from copy import deepcopy
 from email import message
 import json
+import random
 import re
 from typing import Dict, List, Optional
 
 from overrides import override
 import requests
+from langsuite.cli.cmd_cli import CMDClient
 from langsuite.suit import AGENT_REGISTRY
 from langsuite.suit import LangSuiteAgent
 from langsuite.suit import Message
@@ -17,23 +19,12 @@ from langsuite.utils import logging
 
 @AGENT_REGISTRY.register()
 class ExpertAgent(LangSuiteAgent):
-    def __init__(self, name, world, agent_data, step_limit):
+    def __init__(self, name, world, agent_data):
         super().__init__(name, world, agent_data, 100000000)
         self.action_list: list = agent_data["expert_actions"]
-
-    # TODO move to utils?
-    def split(self, data):
-        def split_t(template):
-            params = re.findall(r"\{([^}]+)\}", template[0])
-            return {"template": template[0], "params": params}
-
-        return {
-            act_name: {
-                status: split_t(inner_value)
-                for status, inner_value in inner_dict.items()
-            }
-            for act_name, inner_dict in data.items()
-        }
+        self.template = agent_data["template"]
+        self.cmd_cli: Optional[CMDClient] = None
+        self.web_ui = None
 
     def pack_observation(self, sem_obs):
         if isinstance(sem_obs, str):
@@ -45,10 +36,6 @@ class ExpertAgent(LangSuiteAgent):
     @override
     def setup(self, agent_config, cmd_cli, web_ui):
         super().setup(agent_config, cmd_cli, web_ui)
-
-        with open(agent_config["template"], "r") as template_file:
-            self.template = self.split(json.load(template_file))
-
         self.status = dict(started=False)
         self.chat_history = []
 
@@ -60,12 +47,13 @@ class ExpertAgent(LangSuiteAgent):
 
     @override
     def init(self, task_description: str, extra_info: Dict[str, str]) -> str:
-        start_info = self.template["intro"]["default"]["template"]
-        params = self.template["intro"]["default"]["params"]
+        source = random.choice(self.template["intro"]["default"])
+        start_info = source["template"]
+        params = source["params"]
         for param in params:
             if param == "example":
                 start_info = start_info.replace(
-                    "{" + param + "}", self.template["example"]["default"]["template"]
+                    "{" + param + "}", random.choice(self.template["example"]["default"])["template"]
                 )
             elif param in extra_info:
                 start_info = start_info.replace(
@@ -108,14 +96,14 @@ class ExpertAgent(LangSuiteAgent):
         if (template is None) or (param is None):
             try:
                 logging.logger.debug("action: %s with status: %s", action_name, status)
-                template = self.template[action_name][status]["template"]
-                params = self.template[action_name][status]["params"]
+                source = random.choice(self.template[action_name][status])
             except KeyError:
                 logging.logger.debug(
                     "status %s not in template, change to failure.default", status
                 )
-                template = self.template[action_name]["failure.default"]["template"]
-                params = self.template[action_name]["failure.default"]["params"]
+                source = random.choice(self.template[action_name]["failure.default"])
+            template = source["template"]
+            params = source["params"]
         for key in params:  # type: ignore
             if key == "observation":
                 template = template.replace("{observation}", self.pack_observation(sem_obs))  # type: ignore

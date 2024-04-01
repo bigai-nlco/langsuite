@@ -1,6 +1,6 @@
 import re
 from typing import Dict, List, Optional, Tuple, Union
-from attr import dataclass
+from dataclasses import dataclass
 from overrides import override
 from langsuite.suit import TaskStatus
 from langsuite.suit.exceptions import StructuredException

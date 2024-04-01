@@ -77,7 +77,7 @@ class AlfredTask_V0(LangsuiteTask):
         cls, task_cfg, task_data=None, cmd_cli=None, web_ui=None
     ) -> LangsuiteTask:
         if task_data is None:
-            path = "./data/alfred/alfred_test"
+            path = "./data/alfred"
             tasks = cls.load_data(path, "test")
             task_data = tasks[100]
             logging.logger.debug(task_data["path"])
