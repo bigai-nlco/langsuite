@@ -46,11 +46,11 @@ class Basic2DWorld_V0(World):
     def agents(self):
         return self._agents
 
-    def get_object(self, oid: str) -> Object2D:
+    def get_object(self, name: str) -> Object2D:
         try:
-            return self._objects[oid]
+            return self._objects[name]
         except KeyError as e:
-            raise ParameterMissingError({"object": oid}) from e
+            raise ParameterMissingError({"object": name}) from e
 
     def _as_pos(self, obj_or_pos: Union[str, PhysicalEntity2D, Point2D]) -> Point2D:
         if isinstance(obj_or_pos, str):
@@ -127,7 +127,7 @@ class Basic2DWorld_V0(World):
 
         if isinstance(agent, PhysicalAgent):
             agent = agent.name
-        return nested_find(self._observation[agent], self.object_id2index(obj.name))
+        return nested_find(self._observation[agent], self.object_name2index(obj.name))
 
     def exists_in_obs(
         self,
@@ -153,20 +153,23 @@ class Basic2DWorld_V0(World):
             agent = agent.name
         return any(nested_find(l) for l in self._observation[agent].values())
 
-    def object_id2index(self, oid: str) -> str:
-        if not oid in self._object_id2index:
-            obj = self._objects[oid]
+    def object_name2index(self, name: str) -> str:
+        if not name in self._object_id2index:
+            obj = self._objects[name]
             nid = self._obj_counter[obj.obj_type]
-            self._object_id2index[oid] = f"{obj.obj_type}_{nid}".lower()
-            self._object_index2id[self._object_id2index[oid]] = oid
+            self._object_id2index[name] = f"{obj.obj_type}_{nid}".lower()
+            self._object_index2id[self._object_id2index[name]] = name
             self._obj_counter[obj.obj_type] += 1
-        return self._object_id2index[oid]
+        return self._object_id2index[name]
 
-    def object_index2id(self, oid: str) -> str:
-        return self._object_index2id[oid]
+    def object_index2name(self, oid: str) -> str:
+        try:
+            return self._object_index2id[oid]
+        except KeyError as e:
+            raise ParameterMissingError({"object": oid}) from e
 
     def make_id_list(self, objects: Iterable[PhysicalEntity2D]) -> str:
-        return ",".join(sorted(map(lambda x: self.object_id2index(x.name), objects)))
+        return ",".join(sorted(map(lambda x: self.object_name2index(x.name), objects)))
 
     def _in_vision(self, agent: PhysicalAgent, entity: PhysicalEntity2D) -> bool:
         geometry = entity.geometry
@@ -196,13 +199,13 @@ class Basic2DWorld_V0(World):
         if entity.receptacle:  # type: ignore
             content = [self.iter_expand2index(child, agent) for child in entity.inventory]
             return {
-                "index": self.object_id2index(entity.name),
+                "index": self.object_name2index(entity.name),
                 "content": list(filter(lambda x: x is not None, content)),
                 **entity.list_textual_attrs(),
             }
         else:
             return {
-                "index": self.object_id2index(entity.name),
+                "index": self.object_name2index(entity.name),
                 **entity.list_textual_attrs(),
             }
 
@@ -276,7 +279,7 @@ class Basic2DWorld_V0(World):
         for k, v in list(action_dict.items()):
             if k.endswith('_index'):
                 new_key = f'{k[:-6]}_id'
-                action_dict[new_key] = self.object_index2id(v)
+                action_dict[new_key] = self.object_index2name(v)
                 action_dict.pop(k)
         action_dict["agent"] = self.agents[agent_name]
         action_dict["world"] = self
@@ -292,7 +295,7 @@ class Basic2DWorld_V0(World):
         return result
 
     def replace_sliced(self, obj_index: str):
-        obj_id = self.object_index2id(obj_index)
+        obj_id = self.object_index2name(obj_index)
         obj = self._objects.pop(obj_id)
         obj._locate_at.receptacle.remove_from_inventory(obj)
         
@@ -322,7 +325,7 @@ class Basic2DWorld_V0(World):
             room.render(fig, label = room.name)
         #TODO render windows and doors --- if they are implemented.
         for obj in self._objects.values():
-            obj.render(fig, label = self.object_id2index(obj.name))
+            obj.render(fig, label = self.object_name2index(obj.name))
         for agent in self.agents.values():
             agent.render(fig, label = agent.name)
         fig.update_yaxes(scaleanchor="x", scaleratio=1)

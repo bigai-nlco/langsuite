@@ -31,8 +31,8 @@ def run_cmd_cli(
     task_or_config, task_data, stage, cmd_cli: CMDClient, set_logging=True,
 ) -> int:
     task_id = task_data['path'].split("/")[-2]
-    task_data['log_file'] = f"alfred_{stage}/{task_id}"+".jl"
-    
+    task_data['log_file'] = f"alfred_{stage}/{task_id}.jl"
+   
     task = create_from_config(task_or_config, task_data, cmd_cli)
 
     answer = 0
@@ -53,7 +53,7 @@ def run_cmd_cli(
     return answer
 
 def main():
-    stage = "train_debug"
+    stage = "test"
     data_path = "./data/alfred/"
     config_path = "./configs/alfred_debug_cfg.yml"
     logger.set_log_file(
@@ -69,12 +69,9 @@ def main():
     random.shuffle(tasks_data)
     count = 0
     right = 0
-    for task_data in tasks_data:
+    for task_data in tasks_data[:5]:
         print("***********", count+index)
         count+=1
-        config_path = (
-            config_path
-        )
         try:
             right += run_cmd_cli(
                 task_or_config=config_path,
@@ -82,11 +79,11 @@ def main():
                 stage=stage,
                 cmd_cli=cmd_cli,
             )
-        except Exception as e:
+        except Exception:
             traceback.print_exc()
-            print(print("***********",count+index))
+            print("***********",count+index)
             continue
-    result_str = "right: {}/{} = {}".format(right, count, 1.0 * right / count)
+    result_str = f"right: {right}/{count} = {1.0 * right / count}"
     cmd_cli._console.print(result_str)
 
 if __name__ == "__main__":

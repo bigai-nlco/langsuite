@@ -1,35 +1,38 @@
 {
     "intro": {
         "default": [
-            "As an autonomous intelligent agent, you are now navigating a virtual home, and your task is to perform household tasks using specific actions. You will have access to the following information: \nTask: This is the task you need to accomplish.\nObs: These are the objects within your view. You can see at most {max_view_steps} step(s) in front of you; {left_degree} degrees on your left, {right_degree} degrees on your right.\nInventory: These are the objects you are holding.  You can hold at most {inventory_capacity} objects.\nFeedback: Whether the action is successful and the reason for success or failure.\n\nAt each step, you can choose to execute an action from one of the following:\n`move_ahead`: Move ahead by 1 step.\n`turn_left`: Turn left 90 degrees.\n`turn_right`: Turn right 90 degrees.\n`pick_up [object_name]`: Pick up a pick-upable and visible object within your manipulation distance.\n`drop [object_name]`: Place the object in hand at the place just in front of it.\n`open [object_name]`: Open an openable and visible object within your manipulation distance.\n`close [object_name]`: Close a closeable and visible object.\n`toggle_on [object_name]`: Toggle a toggleable and visible object on.\n`toggle_off [object_name]`: Toggle a toggleable and visible object off.\n`slice [object_name]`: Slice a sliceable and visible object.\n`put [object_name, receptacle_name]`: Place the object in hand into/onto the receptacle.\n`stop [answer]`: Issue this action when you believe the task is complete. If you believe the task is impossible to complete, provide the answer as \"N/A\" in the bracket.\n\nTo be successful, it's crucial to follow these rules:\n1. Issue only ONE valid action and/or ONE thought based on the current observation.\n2. After issuing an action, wait for feedback before proceeding.\n3. Format actions correctly by starting with \"Act:\" and put the parameters in bracket. If there are multiple parameters, seperate them by ','. For example, \"Act: pick_up [cup_0]\".\n4. Operate objects only within your view distance.\n5. If an action fails, try other actions to proceed the task. \n6. Issue a stop action when you believe you have achieved the objective. Do not generate anything after stop.\nPlease note that the agent will get a negative reward if it fails to complete the task.\n\nHere are some examples:\n{example}\n\nPlease respond YES if you can play this game.\n"
+            "As an autonomous intelligent agent, you are now navigating a virtual home, and your task is to perform household tasks using specific actions. You will have access to the following information: \nTask: This is the task you need to accomplish.\nObs: These are the objects within your view. You can see at most {max_view_steps} step(s) in front of you; {left_degree} degrees on your left, {right_degree} degrees on your right.\nInventory: These are the objects you are holding.  You can hold at most {inventory_capacity} objects.\nFeedback: Whether the action is successful and the reason for success or failure.\n\nAt each step, you can choose to execute an action from one of the following:\n`move_ahead`: Move ahead by 1 step.\n`turn_left`: Turn left 90 degrees.\n`turn_right`: Turn right 90 degrees.\n`pick_up [object_name]`: Pick up a pick-upable and visible object within your manipulation distance.\n`drop [object_name]`: Place the object in hand at the place just in front of it.\n`open [object_name]`: Open an openable and visible object within your manipulation distance.\n`close [object_name]`: Close a closeable and visible object.\n`toggle_on [object_name]`: Toggle a toggleable and visible object on.\n`toggle_off [object_name]`: Toggle a toggleable and visible object off.\n`slice [object_name]`: Slice a sliceable and visible object.\n`put [object_name, receptacle_name]`: Place the object in hand into/onto the receptacle.\n`stop [answer]`: Issue this action when you believe the task is complete. If you believe the task is impossible to complete, provide the answer as \"N/A\" in the bracket.\n\nTo be successful, it's crucial to follow these rules:\n1. Issue only ONE valid action and/or ONE thought based on the current observation.\n2. After issuing an action, wait for feedback before proceeding.\n3. Format actions correctly by starting with \"Act:\" and put the parameters in bracket. If there are multiple parameters, seperate them by ','. For example, \"Act: pick_up [cup_0]\".\n4. Operate objects only within your view distance.\n5. If an action fails, try other actions to proceed the task. \n6. Issue a stop action when you believe you have achieved the objective. Do not generate anything after stop.\nPlease note that the agent will get a negative reward if it fails to complete the task.\n\nHere are some examples:\n```\n{example}\n```\n\nPlease respond YES if you can play this game.\n"
         ]
     },
     "example": {
         "default": [
-            ""
+            "Task: put a clean lettuce in diningtable.\nObs: You can see nothing ahead.\n> Act: move_ahead"
         ]
     },
     "InvalidAction": {
         "failure.actionNotFound": [
-            "Feedback: Action failed. There is no valid action in your response. Please generate action in a correct format. You must put action arguments in brackets. For example, `move_ahead`, `turn_left`, `turn_right`, `pick_up [object_name]`, `drop`, `open [object_name]`, `close [object_name]`, `toggle_on [object_name]`, `toggle_off [object_name]`, `slice [object_name]`, put [object_name, receptacle_name]."
+            "Feedback: Action failed. There is no valid action in your response. Please generate action in a correct format. You must put action arguments in brackets. Choose one action from the list: `move_ahead`, `turn_left`, `turn_right`, `pick_up [object_name]`, `drop`, `open [object_name]`, `close [object_name]`, `toggle_on [object_name]`, `toggle_off [object_name]`, `slice [object_name]`, put [object_name, receptacle_name]."
         ],
         "failure.multipleActions": [
             "Feedback: Action failed. I found multiple actions in your response, please only respond with one action at a time. For example, \"Act: move_ahead\""
+        ],
+        "failure.selfFeedback": [
+            "Feedback: Action failed. Do not imagine feedback in your response, only respond with one action and wait for system's feedback. For example, \"Act: move_ahead\""
         ],
         "failure.invalidObjectName": [
             "Feedback: Action failed. There is no the object \"{object}\" in your view space. Please operate the object in sight.\nObs: {observation}"
         ],
         "failure.objectNotProvide": [
-            "Feedback: Action failed. Please generate action in a correct format. You must put action arguments in brackets. For example, `pick_up [object_name]`, `drop [object_name]`, `open [object_name]`, `close [object_name]`, `toggle_on [object_name]`, `toggle_off [object_name]`, `slice [object_name]`, put [object_name, receptacle_name]."
+            "Feedback: Action failed. The object is not provided or not in sight. You can only manipulate the object in sight. You must put the object_name in brackets. For example, `pick_up [object_name]`, `drop`, `open [object_name]`, `close [object_name]`, `toggle_on [object_name]`, `toggle_off [object_name]`, `slice [object_name]`, put [object_name, receptacle_name]."
         ],
         "failure.objectNotExist": [
             "Feedback: Action failed. There is no object \"{object}\" existing. Please operate the object in sight.\nObs: {observation}"
         ],
         "failure.objectNotInView": [
-            "Feedback: Action failed. You can not see {object} within your view distance ({max_view_steps} step(s)).\nObs: {observation}"
+            "Feedback: Action failed. You can not see {object} in your view space.\nObs: {observation}"
         ],
         "failure.objectNotInMainpulation": [
-            "Feedback: Action failed. Object {object} is not within your manipulation distance ({manipulation_distance} step(s)).\nObs: {observation}"
+            "Feedback: Action failed. Object {object} is not in your manipulation distance ({manipulation_distance} step).\nObs: {observation}"
         ]
     },
     "Start": {

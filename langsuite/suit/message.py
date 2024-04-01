@@ -13,7 +13,7 @@ class Message:
     
     def __post_init__(self):
         # HACK It will be better to check the prefix carefully.
-        if (self.action == 'act' or 'thought') and (':' in self.raw_content):
+        if (self.action == 'act' or 'thought') and (':' in self.raw_content[:10]):
             self.stripped_content = self.raw_content.split(":", 1)[1]
         else:
             self.stripped_content = self.raw_content

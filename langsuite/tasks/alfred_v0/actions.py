@@ -289,6 +289,7 @@ class Stop(TaskAction):
     agent: PhysicalAgent
     task_type: str
     target_status: AlfredStatus
+    answer: Any
     name: ClassVar[str] = "Stop"
 
     def look_at_obj_in_light(self) -> bool:

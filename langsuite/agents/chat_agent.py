@@ -27,7 +27,10 @@ from langsuite.utils.logging import logger
 
 @AGENT_REGISTRY.register()
 class ChatAgent(LangSuiteAgent):
-    def __init__(self, name, world, agent_data, step_limit = 5):
+    def __init__(self, name, world, agent_data, step_limit = 50):
+        # Agent data has higher priority
+        if 'step_limit' in agent_data:
+            step_limit = agent_data['step_limit']
         super().__init__(name, world, agent_data, step_limit)
         self.template = agent_data["template"]
         self.from_user = agent_data.get("from_user", False)

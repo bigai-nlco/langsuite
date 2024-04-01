@@ -33,8 +33,12 @@ class InWorldAction(Action, EnforceOverrides):
         # Only expose index
         id_keys = set(filter(lambda x: x.endswith("_id"), info.keys()))
         for k in id_keys:
-            info[k[:-3]] = self.world.object_id2index(info[k])
-            info.pop(k)
+            try:
+                info[k[:-3]] = self.world.object_name2index(info[k])
+                info.pop(k)
+            except KeyError:
+                # If the key is wrong, just return it as is.
+                pass
         return info
 
 
@@ -112,12 +116,12 @@ class PickUp2D(InteractAction):
                         "object": self.object_id,
                         "inventory": ",".join(
                             map(
-                                self.world.object_id2index,
+                                self.world.object_name2index,
                                 map(lambda x: x.name, self.agent.inventory),
                             )
                         ),
                     }
-                )
+                ) from e
             else:
                 raise e
         if not hasattr(self.object, "isPickedUp"):
@@ -141,7 +145,7 @@ class PickUp2D(InteractAction):
             {
                 "inventory": ",".join(
                     map(
-                        self.world.object_id2index,
+                        self.world.object_name2index,
                         map(lambda x: x.name, self.agent.inventory),
                     )
                 )

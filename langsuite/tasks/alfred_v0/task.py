@@ -207,7 +207,7 @@ class AlfredTask_V0(LangsuiteTask):
             if raw_action["api_action"]["action"] in name_dict:
                 raw_action["action_name"] = name_dict[raw_action["api_action"]["action"]]
                 expert_actions.append(raw_action)
-        expert_actions.append({"api_action": {"action": "Stop"}, "action_name": "stop"})
+        expert_actions.append({"api_action": {"action": "Stop"}, "action_name": "stop", "answer": "N/A"})
 
         task_cfg["agents"][0]["expert_actions"] = expert_actions
 

@@ -68,7 +68,7 @@ class Basic2DHandler(MessageHandler):
                 "|".join(self.ACTIONS_WITH_TWO_ARGS),
             )
         )
-        param_fmt = '([A-Za-z]+_[0-9]+)'
+        param_fmt = '([A-Za-z0-9_]+)'
         act_regex = fr"[Aa]ct(?:ion)?: *({actions}) *(?:\[{param_fmt}(?: *, *{param_fmt})?\])? *"
         stop_regex = fr"(?:[Aa]ct(?:ion)?:)? *{self.STOP_NAME} *\[(.+)\] *"
            
