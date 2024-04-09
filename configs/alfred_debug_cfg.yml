@@ -1,14 +1,15 @@
 task: AlfredTask_V0
 
-template: ./templates/alfred/alfred_react.json
+template: ./templates/alfred/alfred_react_emmem.json
 
 world:
 
 agents:
-  - type: ChatAgent
-    from_user: True
-    debug: True
-#  - type: ExpertAgent
+  - type: ExpertAgent
+  # - type: ChatAgent
+  #   from_user: True
+  #   debug: True
+    step_limit: 50
     inventory_capacity: 5
     focal_length: 10
     max_manipulate_distance: 2

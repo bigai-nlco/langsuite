@@ -384,12 +384,17 @@ class Basic2DWorld_V0(World):
         def locate_by_matching(X: Iterable[Object2D], Y: Iterable[Object2D]):
             DIST_THRESHOLD = 0.5
             edges = [(x.obj_name, y.obj_name, (x.position - y.position).modulus) for x in X for y in Y]
-            edges = list(filter(lambda x: x[2] < DIST_THRESHOLD, edges))
+            edges = list(filter(lambda x: x[2] <= DIST_THRESHOLD, edges))
+            if len(edges) == 0:
+                return
+            logger.info(f"Linking related object with edges: {edges}")
             for x, y in WUtils.compute_matching(edges):
                 ox = world._objects[x]
                 oy = world._objects[y]
                 rel = LocateAt(oy, ox._timestamp, ox.position - oy.position)
                 ox.update_position(rel)
+                if ox.obj_type == 'Faucet':
+                    setattr(oy, 'isFilledWithLiquid', getattr('oy', 'isFilledWithLiquid', False))
 
         #HACK locate faucets to closest basins.
         faucets = filter(lambda x: x.obj_type == 'Faucet', world._objects.values())

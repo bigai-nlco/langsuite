@@ -252,7 +252,7 @@ class SwitchBoolAttr(InteractAction):
     @override
     def _exec(self) -> Tuple[bool, Dict[str, object]]:
         switched = not getattr(self.object, self.attr_name)
-        self.object.update_attr(self.attr_name, switched)
+        self.object.update_attr(self.attr_name, switched, None)
         return (True, {})
 
 
@@ -288,7 +288,7 @@ class SetBoolAttrWith(InteractAction):
 
     @override
     def _exec(self) -> Tuple[bool, Dict[str, object]]:
-        self.object.update_attr(self.attr_name, self.expect_val)
+        self.object.update_attr(self.attr_name, self.expect_val, None)
         return (True, {})
 
 
@@ -335,7 +335,7 @@ class Cook(SetBoolAttrWith):
     def _exec(self) -> Tuple[bool, Dict[str, object]]:
         result = super()._exec()
         if getattr(self.object, "temperature"):
-            self.object.update_attr("temperature", "Hot")
+            self.object.update_attr("temperature", "Hot", None)
         return result
 
 
@@ -363,7 +363,7 @@ class Heat(SetBoolAttrWith):
     def _exec(self) -> Tuple[bool, Dict[str, object]]:
         result = super()._exec()
         if getattr(self.object, "isCooked"):
-            self.object.update_attr("isCooked", True)
+            self.object.update_attr("isCooked", True, None)
         return result
 
 

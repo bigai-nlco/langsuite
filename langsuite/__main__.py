@@ -20,7 +20,7 @@ def run_cmd_cli(config_path, verbose=False):
         log_file=f"logs/console_logs/{datetime.now().strftime('console-%Y-%m-%d_%H-%M-%S.jl')}",
         verbose=verbose
     )
-    logger.set_cmd_client(cmd_cli, disable_console_logging=not verbose)
+    logger.set_cmd_client(cmd_cli, disable_console_logging=verbose)
     cmd_cli.reset()
 
     config = io_utils.read_config(config_path)
@@ -38,7 +38,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("action", default="cmd", help="Langsuite actions")
     parser.add_argument("config", default=None, nargs="?", help="Config file path")
-    parser.add_argument("--verbose", default=False, action="store_true")
+    parser.add_argument("--verbose", default=True, action="store_true")
     parser.add_argument("--log-level", default="debug", type=str)
     args = parser.parse_args()
 

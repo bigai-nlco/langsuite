@@ -2,8 +2,10 @@ from abc import ABC, abstractmethod
 import copy
 import random
 import re
-from typing import Dict, Set
+from typing import Any, Dict, Optional, Set
 from dataclasses import dataclass
+from xml.dom.minidom import Entity
+from click import Option
 from overrides import EnforceOverrides, override
 from plotly.graph_objects import Figure, Scatter
 from langsuite.constants import CSS4_COLORS
@@ -17,12 +19,12 @@ from shapely import transform, Polygon, Point
 
 class PhysicalEntity2D(ABC, EnforceOverrides):
     def __init__(self) -> None:
-        self.inventory: Set["PhysicalEntity2D"] = set()
+        self.inventory: Set["Object2D"] = set()
 
-    def add_to_inventory(self, obj: "PhysicalEntity2D"):
+    def add_to_inventory(self, obj: "Object2D"):
         self.inventory.add(obj)
 
-    def remove_from_inventory(self, obj: "PhysicalEntity2D"):
+    def remove_from_inventory(self, obj: "Object2D"):
         self.inventory.remove(obj)
 
     @property
@@ -255,9 +257,9 @@ class Object2D(PhysicalEntity2D):
                 continue
             if hasattr(obj, f["on_attr"]):
                 if "value" in f:
-                    setattr(obj, f["on_attr"], f["value"])
+                    obj.update_attr(f["on_attr"], f["value"], self)
                 else:
-                    setattr(obj, f["on_attr"], getattr(self, f["on_attr"]))
+                    obj.update_attr(f["on_attr"], getattr(self, f["on_attr"]), self)
 
     @property
     def name(self):
@@ -284,17 +286,18 @@ class Object2D(PhysicalEntity2D):
             assert "premise_attr" in f
             if getattr(self, f["premise_attr"]) != f.get("premise_value", True):
                 continue
-            if hasattr(new_receptacle, f["on_attr"]):
+            if isinstance(new_receptacle, Object2D) and hasattr(new_receptacle, f["on_attr"]):
                 if "value" in f:
-                    setattr(new_receptacle, f["on_attr"], f["value"])
+                    new_receptacle.update_attr(f["on_attr"], f["value"], self)
                 else:
-                    setattr(new_receptacle, f["on_attr"], getattr(self, f["on_attr"]))
+                    new_receptacle.update_attr(f["on_attr"], getattr(self, f["on_attr"]), self)
 
-    def update_attr(self, attr_name: str, val: object):
+    def update_attr(self, attr_name: str, val: Any, last: Optional["Object2D"]):
         assert hasattr(self, attr_name)
-        # I don't think the data quality is good enough to do such check
+        # I don't think the data quality is good enough to do the following type consistency check
         # old_val = getattr(self, attr_name)
         # assert old_val is None or isinstance(val, type(old_val))
+
         logger.debug(f"Set {attr_name} of {self.name} as {val}")
         setattr(self, attr_name, val)
 
@@ -302,23 +305,26 @@ class Object2D(PhysicalEntity2D):
             if f["premise_attr"] != attr_name or f.get("premise_value", True) != val:
                 continue
             for obj in self.inventory:
+                if obj == last:
+                    continue
                 if hasattr(obj, f["on_attr"]):
                     if "value" in f:
-                        setattr(obj, f["on_attr"], f["value"])
+                        obj.update_attr(f["on_attr"], f["value"], self)
                     else:
-                        setattr(obj, f["on_attr"], getattr(self, f["on_attr"]))
+                        obj.update_attr(f["on_attr"], getattr(self, f["on_attr"]), self)
 
         for f in self._inventory_function:
             if f["premise_attr"] != attr_name or f.get("premise_value", True) != val:
                 continue
-            if hasattr(self._locate_at.receptacle, f["on_attr"]):
+            receptacle = self._locate_at.receptacle
+            if not isinstance(receptacle, Object2D):
+                continue
+            if hasattr(receptacle, f["on_attr"]):
                 if "value" in f:
-                    setattr(self._locate_at.receptacle, f["on_attr"], f["value"])
+                    receptacle.update_attr(f["on_attr"], f["value"], self)
                 else:
-                    setattr(
-                        self._locate_at.receptacle,
-                        f["on_attr"],
-                        getattr(self, f["on_attr"]),
+                    receptacle.update_attr(
+                        f["on_attr"], getattr(self, f["on_attr"]), self
                     )
 
     @override

@@ -71,7 +71,7 @@ class CMDClient:
         self._cmd_log_file = log_file
         
     def print(self, message='', **kwargs):
-        if not self.verbose:
+        if self.verbose:
             self._console.print(message, **kwargs)
 
     def clear(self):
@@ -141,7 +141,8 @@ class CMDClient:
         return self.user_input()
 
     def reset(self):
-        self.clear()
+        if self.verbose:
+            self.clear()
         self.print(WELCOME_MSG)
 
     def render_chatbot(

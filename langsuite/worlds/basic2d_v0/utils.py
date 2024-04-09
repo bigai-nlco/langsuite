@@ -50,20 +50,20 @@ class DataLoader:
 
 
 def ai2thor_obj_2_procthor(org_objects):
-    '''
+    """
     Convert ai2thor objects to procthor objects.
 
     :param org_objects: ai2thor objects
     :type org_objects: list
     :rtype: tuple (objects, doors, windows, dependencies)
-    '''
+    """
     objects = dict()
     receptacles_rels = dict()
     doors = []
     windows = []
 
     for object_data in org_objects:
-        if object_data['objectType'] == 'Floor':
+        if object_data["objectType"] == "Floor":
             continue
         object_data["assetId"] = object_data.pop("name")
         object_data["rotation"] = {"x": 0.0, "y": 0.0, "z": 0.0}
@@ -85,40 +85,41 @@ def ai2thor_obj_2_procthor(org_objects):
 
 
 def receptacles_hack(
-        old_deps: Dict[str, list], flat_objects: Dict[str, Dict]
-    ) -> Tuple[List[dict],List[Tuple[str, str]]]:
-        """
-        Conver flat_objects with alfred-style rels into nested.
+    old_deps: Dict[str, list], flat_objects: Dict[str, Dict]
+) -> Tuple[List[dict], List[Tuple[str, str]]]:
+    """
+    Conver flat_objects with alfred-style rels into nested.
 
-        :param old_rels: raw receptacle rels, child -> parents, use objectId as keys and values.
-        :type old_rels: dict
-        :param flat_objects: raw objects, key = objectId. !!! will modify this variable.
-        :type flat_objects: dict
-        :rtype: nested_objs, deps # format is adopted from procthor.
-        """
-        dependency = []
-        for obj in old_deps:
-            # Floor is room, not object (provided to LLM)
-            parents = list(filter(lambda x: not x.startswith('Floor|'), old_deps[obj]))
-            if len(parents) > 1:
-                obj_data = flat_objects[obj]
-                parents_data = map(lambda x: flat_objects[x], parents)
-                receptacle = _multi_receptacle_hack(obj_data, parents_data)
-            elif len(parents) == 1:
-                receptacle = parents[0]
-            else:  # len == 0
-                continue
-            dependency.append((obj, receptacle))
-        order = ordering_objects(dependency, flat_objects.keys())
-        logger.debug("sorted obj_id: %s", order)
-        dep_map = defaultdict(list)
-        for obj, rec in dependency:
-            dep_map[rec].append(obj)
-        logger.debug("dependencies: %s", dep_map)
-        for rec in order:
-            for obj in dep_map[rec]:
-                flat_objects[rec]["children"].append(flat_objects.pop(obj))
-        return list(flat_objects.values()), dependency
+    :param old_rels: raw receptacle rels, child -> parents, use objectId as keys and values.
+    :type old_rels: dict
+    :param flat_objects: raw objects, key = objectId. !!! will modify this variable.
+    :type flat_objects: dict
+    :rtype: nested_objs, deps # format is adopted from procthor.
+    """
+    dependency = []
+    for obj in old_deps:
+        # Floor is room, not object (provided to LLM)
+        parents = list(filter(lambda x: not x.startswith("Floor|"), old_deps[obj]))
+        if len(parents) > 1:
+            obj_data = flat_objects[obj]
+            parents_data = map(lambda x: flat_objects[x], parents)
+            receptacle = _multi_receptacle_hack(obj_data, parents_data)
+        elif len(parents) == 1:
+            receptacle = parents[0]
+        else:  # len == 0
+            continue
+        dependency.append((obj, receptacle))
+    order = ordering_objects(dependency, flat_objects.keys())
+    logger.debug("sorted obj_id: %s", order)
+    dep_map = defaultdict(list)
+    for obj, rec in dependency:
+        dep_map[rec].append(obj)
+    logger.debug("dependencies: %s", dep_map)
+    for rec in order:
+        for obj in dep_map[rec]:
+            flat_objects[rec]["children"].append(flat_objects.pop(obj))
+    return list(flat_objects.values()), dependency
+
 
 def _multi_receptacle_hack(child, parents) -> str:
     """

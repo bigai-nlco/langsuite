@@ -55,15 +55,15 @@ class AlfredHandler(Basic2DHandler):
             args = ' [n/a]'
         if 'objectId' in action['api_action']:
             object_id = action['api_action']['objectId']
-            print(object_id)
-            print(self.world.object_name2index(object_id))
-            action_dict['object_index'] = self.world.object_name2index(object_id)
+            object_index = self.world.object_name2index(object_id)
+            action_dict['object_index'] = object_index
             if 'receptacleObjectId' in action['api_action']:
                 receptacle_id = action['api_action']['receptacleObjectId']
-                action_dict["receptacle_index"] = self.world.object_name2index(receptacle_id)
-                args = f' [{object_id}, {receptacle_id}]'
+                receptacle_index = self.world.object_name2index(receptacle_id)
+                action_dict["receptacle_index"] = receptacle_index
+                args = f' [{object_index}, {receptacle_index}]'
             else:
-                args = f' [{object_id}]'
+                args = f' [{object_index}]'
 
         content = f'act: {action_name}{args}'
         

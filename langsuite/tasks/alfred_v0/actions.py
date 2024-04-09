@@ -397,7 +397,7 @@ class Stop(TaskAction):
                 self.target_status.object_sliced,
             )
             and (
-                getattr(obj, "isDirty", None) is False
+                getattr(obj, "isDirty", False) is False
             )  # FIXME will find obj that not been cleaned but wasn't dirty.
             for obj in self.world._objects.values()
         )
