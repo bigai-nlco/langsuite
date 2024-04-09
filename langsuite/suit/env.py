@@ -7,6 +7,7 @@ from langsuite.suit import World
 from langsuite.utils import logging
 from langsuite.suit import WORLD_REGISTRY
 
+
 class LangSuiteEnv(ParallelEnv):
     """
     Env --START-> LangAgent --Action Decision-> World --Obs--> LangAgent -->
@@ -28,8 +29,11 @@ class LangSuiteEnv(ParallelEnv):
 
     @property
     def possible_agents(self):
-        return [v for k, v in self.agents.items() if k not in self._terminated and k not in self._truncated]
-
+        return [
+            v
+            for k, v in self.agents.items()
+            if k not in self._terminated and k not in self._truncated
+        ]
 
     def make_world(self, env_data) -> World:
         # FIXME more world types
@@ -64,30 +68,38 @@ class LangSuiteEnv(ParallelEnv):
         # TODO check if agent stopped
         for agent_id, agent in self.agents.items():
             if agent_id in actions:
-                action_dict = agent.make_decision(actions[agent_id])
-                #Just a thought, load action.
-                if len(action_dict) == 0:
-                    action_dict = agent.make_decision('OK.')
-                #Stop after decision, because it should know that it is stopped.
+                try:
+                    action_dict = agent.make_decision(actions[agent_id])
+                    # Just a thought, load action.
+                    if len(action_dict) == 0:
+                        action_dict = agent.make_decision("OK.")
+                    # Stop after decision, because it should know that it is stopped.
+                except StructuredException as e:
+                    # Has error, don't execute
+                    feedback_dict[agent_id] = e.param_dict
+                    continue
+
                 if not agent.stopped:
                     self._step_count[agent_id] += 1
                     _, feedback = self.world.step(agent_id, action_dict)
                     feedback_dict[agent_id] = feedback
                     if feedback_dict[agent_id]["action"] == "Stop":
                         agent.pre_stop()
-                        self._rewards[agent_id] = feedback_dict[agent_id]['reward']
+                        self._rewards[agent_id] = feedback_dict[agent_id]["reward"]
                 else:
-                    logging.logger.info('%s stops', agent_id)
+                    logging.logger.info("%s stops", agent_id)
                     self._terminated[agent_id] = True
 
-        #TODO Theoratially, ParallelEnv should update after all executions, currently our update may simplifies it, we didn't force step to not update things.
+        # TODO Theoratially, ParallelEnv should update after all executions, currently our update may simplifies it, we didn't force step to not update things.
         self.world.update()
 
         for agent_id, agent in self.agents.items():
             if agent_id in feedback_dict:
-                #FIXME move this into agent and add hint info
+                # FIXME move this into agent and add hint info
                 if self._step_count[agent_id] == agent.step_limit:
-                    logging.logger.info('%s reach step limit %d', agent_id, agent.step_limit)
+                    logging.logger.info(
+                        "%s reach step limit %d", agent_id, agent.step_limit
+                    )
                     self._truncated[agent_id] = True
 
         observation_dict = {}

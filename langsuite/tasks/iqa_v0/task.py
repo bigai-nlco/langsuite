@@ -1,5 +1,4 @@
 from collections import defaultdict
-import copy
 
 import json
 from pathlib import Path
@@ -40,15 +39,15 @@ class IQATask_V0(LangsuiteTask):
     @override
     def make_status(self, task_data) -> TaskStatus:
         return IQAStatus(
-            answer=task_data['target_status']['answer'],
-            object_class=task_data['target_status']['object_class'],
-            recept=task_data['target_status'].get('recept')
+            answer=task_data["target_status"]["answer"],
+            object_class=task_data["target_status"]["object_class"],
+            recept=task_data["target_status"].get("recept"),
         )
 
     @override
     def make_handler(self) -> MessageHandler:
         name_mapping = {x.name: x.__name__ for x in self.ACTIONS}
-        return IQAHandler(self.task_type, self.target_status, name_mapping)
+        return IQAHandler(task_type=self.task_type, target_status=self.target_status, action_name_map=name_mapping)
 
     @classmethod
     @override
@@ -72,8 +71,8 @@ class IQATask_V0(LangsuiteTask):
         tasks = []
         for _id, world_data in enumerate(iqa_data):
             task_json = world_data[0]
-            task_json['target_status'] = world_data[1]
-            task_json['task_id'] = _id
+            task_json["target_status"] = world_data[1]
+            task_json["task_id"] = _id
             tasks.append(task_json)
         return tasks
 
@@ -130,21 +129,23 @@ class IQATask_V0(LangsuiteTask):
         logging.logger.debug("dependencies: %s", dep_map)
         for rec in order:
             # HACK do not need Floor
-            if flat_objects[rec]["objectType"] == 'Floor':
+            if flat_objects[rec]["objectType"] == "Floor":
                 flat_objects.pop(rec)
                 continue
             for obj in dep_map[rec]:
                 flat_objects[rec]["children"].append(flat_objects.pop(obj))
         return list(flat_objects.values())
 
-    #TODO load expert actions
+    # TODO load expert actions
     @classmethod
     @override
     def _convert_task_data_format(cls, task_cfg, raw_task_data) -> dict:
-        question_type_id = task_cfg['question_type']
-        task_cfg['task_description'] = raw_task_data['target_status'][question_type_id]['question']
-        task_cfg['task_type'] = question_type_id
-        task_cfg['target_status'] = raw_task_data['target_status'][question_type_id]
+        question_type_id = task_cfg["question_type"]
+        task_cfg["task_description"] = raw_task_data["target_status"][question_type_id][
+            "question"
+        ]
+        task_cfg["task_type"] = question_type_id
+        task_cfg["target_status"] = raw_task_data["target_status"][question_type_id]
 
         scence_data = raw_task_data
         world_data = dict()
@@ -152,7 +153,7 @@ class IQATask_V0(LangsuiteTask):
         # convert room
         rooms = []
         r_id = scence_data["sceneName"]
-        geo_raw = scence_data["sceneBounds"]['cornerPoints']
+        geo_raw = scence_data["sceneBounds"]["cornerPoints"]
         rooms.append({"id": r_id, "floorPolygon": geo_raw})
         world_data["rooms"] = rooms
 
@@ -164,12 +165,9 @@ class IQATask_V0(LangsuiteTask):
 
         ag_init = scence_data["agent"]
         ag_rot = ag_init["rotation"]["y"]
-        ag_pos = {"x": ag_init['position']["x"], "z": ag_init['position']["z"]}
+        ag_pos = {"x": ag_init["position"]["x"], "z": ag_init["position"]["z"]}
 
-        agents_data = {
-            "position": ag_pos,
-            "rotation": ag_rot
-        }
+        agents_data = {"position": ag_pos, "rotation": ag_rot}
 
         world_data["metadata"] = dict()
         world_data["metadata"]["agent"] = agents_data
@@ -182,6 +180,5 @@ class IQATask_V0(LangsuiteTask):
             template["example"]["default"] = template["example"][str(question_type_id)]
 
         task_cfg["agents"][0]["template"] = template
-
 
         return task_cfg

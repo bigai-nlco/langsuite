@@ -1,9 +1,7 @@
-import re
-from typing import Dict, List, Optional, Set, Tuple, Union
-from attr import dataclass
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
 from overrides import override
 from langsuite.suit import TaskStatus
-from langsuite.suit.exceptions import StructuredException
 from langsuite.suit.message import Message
 from langsuite.worlds.basic2d_v0.message_handler import Basic2DHandler
 
@@ -17,13 +15,21 @@ class RearrangeStatus(TaskStatus):
     target_open: Dict[str, Optional[bool]]
     target_pos: Dict[str, Tuple[int, int]]
 
-@dataclass
+
 class RerrangeHandler(Basic2DHandler):
-    action_name_map: Dict[str, str]
     ACTIONS_WITH_NO_ARGS = {"move_ahead", "turn_left", "turn_right"}
     ACTIONS_WITH_ONE_ARG = {"open", "pick_up", "drop", "close"}
     ACTIONS_WITH_TWO_ARGS = {"put"}
-    
+
+    def __init__(
+        self,
+        task_type: str,
+        target_status: TaskStatus,
+        action_name_map: Dict[str, str],
+    ) -> None:
+        super().__init__(task_type, target_status)
+        self.action_name_map = action_name_map
+
     def __post_init__(self):
         self.ACTIONS_WITH_NO_ARGS.intersection_update(self.action_name_map.keys())
         self.ACTIONS_WITH_ONE_ARG.intersection_update(self.action_name_map.keys())
@@ -34,5 +40,7 @@ class RerrangeHandler(Basic2DHandler):
         return self.action_name_map[s]
 
     @override
-    def parse_expert_action(self, agent_name, action: Dict) -> List[Tuple[Message, dict]]:
+    def parse_expert_action(
+        self, agent_name, action: Dict
+    ) -> List[Tuple[Message, dict]]:
         raise NotImplementedError("There is no IQA expert now.")

@@ -39,7 +39,7 @@ def main():
     parser.add_argument("action", default="cmd", help="Langsuite actions")
     parser.add_argument("config", default=None, nargs="?", help="Config file path")
     parser.add_argument("--verbose", default=True, action="store_true")
-    parser.add_argument("--log-level", default="debug", type=str)
+    parser.add_argument("--log-level", default="info", type=str)
     args = parser.parse_args()
 
     logger.set_log_file(f"logs/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log')}")

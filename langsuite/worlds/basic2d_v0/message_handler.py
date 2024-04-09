@@ -2,7 +2,7 @@ from abc import abstractmethod
 from email import message
 import re
 from typing import List, Optional, Tuple
-from attr import dataclass
+from dataclasses import dataclass
 from git import Tree
 from overrides import override
 from langsuite.suit import InvalidActionError, ParameterMissingError
@@ -12,15 +12,15 @@ from langsuite.suit.exceptions import StructuredException
 from langsuite.suit import TaskStatus
 from langsuite.utils import logging
 
-@dataclass
 class Basic2DHandler(MessageHandler):
-    task_type: str
-    target_status: TaskStatus
-
     ACTIONS_WITH_NO_ARGS = {}
     ACTIONS_WITH_ONE_ARG = {}
     ACTIONS_WITH_TWO_ARGS = {}
     STOP_NAME = 'stop'
+
+    def __init__(self, task_type: str, target_status: TaskStatus) -> None:
+        self.task_type = task_type
+        self.target_status = target_status
 
     @abstractmethod
     def mapping_action_names(self, s: str) -> str:
