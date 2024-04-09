@@ -87,12 +87,12 @@ class OpenObject(TaskActionWrapper):
         return self._wrapped_action
 
     def __init__(
-        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_id: str
+        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_index: str
     ) -> None:
         self._wrapped_action = SwitchBoolAttr(
             agent=agent,
             world=world,
-            object_id=object_id,
+            object_index=object_index,
             attr_name="isOpen",
             expect_val=False,
         )
@@ -118,12 +118,12 @@ class OpenObject(TaskActionWrapper):
 #         return self._wrapped_action
 
 #     def __init__(
-#         self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_id: str
+#         self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_index: str
 #     ) -> None:
 #         self._wrapped_action = SwitchBoolAttr(
 #             agent=agent,
 #             world=world,
-#             object_id=object_id,
+#             object_index=object_index,
 #             attr_name="isOpen",
 #             expect_val=True,
 #         )

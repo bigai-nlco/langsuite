@@ -46,11 +46,11 @@ class Basic2DWorld_V0(World):
     def agents(self):
         return self._agents
 
-    def get_object(self, name: str) -> Object2D:
+    def get_object(self, index: str) -> Object2D:
         try:
-            return self._objects[name]
+            return self._objects[self._object_index2id[index]]
         except KeyError as e:
-            raise ParameterMissingError({"object": name}) from e
+            raise ParameterMissingError(index in self._object_index2id) from e
 
     def _as_pos(self, obj_or_pos: Union[str, PhysicalEntity2D, Point2D]) -> Point2D:
         if isinstance(obj_or_pos, str):
@@ -162,12 +162,6 @@ class Basic2DWorld_V0(World):
             self._obj_counter[obj.obj_type] += 1
         return self._object_id2index[name]
 
-    def object_index2name(self, oid: str) -> str:
-        try:
-            return self._object_index2id[oid]
-        except KeyError as e:
-            raise ParameterMissingError({"object": oid}) from e
-
     def make_id_list(self, objects: Iterable[PhysicalEntity2D]) -> str:
         return ",".join(sorted(map(lambda x: self.object_name2index(x.name), objects)))
 
@@ -276,11 +270,6 @@ class Basic2DWorld_V0(World):
     ) -> Tuple[bool, Dict[str, object]]:
 #        print(action_dict)
         type_str = action_dict.pop("action")
-        for k, v in list(action_dict.items()):
-            if k.endswith('_index'):
-                new_key = f'{k[:-6]}_id'
-                action_dict[new_key] = self.object_index2name(v)
-                action_dict.pop(k)
         action_dict["agent"] = self.agents[agent_name]
         action_dict["world"] = self
         try:
@@ -295,8 +284,8 @@ class Basic2DWorld_V0(World):
         return result
 
     def replace_sliced(self, obj_index: str):
-        obj_id = self.object_index2name(obj_index)
-        obj = self._objects.pop(obj_id)
+        obj_name = self._object_index2id[obj_index]
+        obj = self._objects.pop(obj_name)
         obj._locate_at.receptacle.remove_from_inventory(obj)
         
         if obj.obj_type == "Egg":

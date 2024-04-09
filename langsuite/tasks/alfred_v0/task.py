@@ -69,7 +69,7 @@ class AlfredTask_V0(LangsuiteTask):
     @override
     def make_handler(self) -> MessageHandler:
         name_mapping = {x.name: x.__name__ for x in self.ACTIONS}
-        return AlfredHandler(self.task_type, self.target_status, name_mapping)
+        return AlfredHandler(self.task_type, self.target_status, self.env.world, name_mapping)
 
     @classmethod
     @override
@@ -79,7 +79,7 @@ class AlfredTask_V0(LangsuiteTask):
         if task_data is None:
             path = "./data/alfred"
             tasks = cls.load_data(path, "test")
-            task_data = tasks[100]
+            task_data = tasks[350]
             logging.logger.debug(task_data["path"])
 
         return super().create(task_cfg, task_data, cmd_cli, web_ui)

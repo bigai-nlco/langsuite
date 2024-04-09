@@ -86,6 +86,68 @@
     "receptacle_function": [
         {
             "source_domain": {
+                "type": "Toaster",
+                "has_attr": {}
+            },
+            "premise_attr": "isToggled",
+            "premise_value": true,
+            "on_attr": "isCooked",
+            "value": true,
+            "target_domain": "BreadSliced"
+        },
+        {
+            "source_domain": {
+                "type": "Toaster",
+                "has_attr": {}
+            },
+            "premise_attr": "isToggled",
+            "premise_value": true,
+            "on_attr": "temperature",
+            "value": "Hot",
+            "target_domain": "BreadSliced"
+        },
+        {
+            "source_domain": {
+                "type": "StoveBurner",
+                "has_attr": {}
+            },
+            "premise_attr": "isToggled",
+            "premise_value": true,
+            "on_attr": "isCooked",
+            "value": true
+        },
+        {
+            "source_domain": {
+                "type": "StoveBurner",
+                "has_attr": {}
+            },
+            "premise_attr": "isToggled",
+            "premise_value": true,
+            "on_attr": "temperature",
+            "value": "Hot"
+        },
+        {
+            "source_domain": {
+                "type": "Microwave",
+                "has_attr": {}
+            },
+            "premise_attr": "isToggled",
+            "premise_value": true,
+            "on_attr": "isCooked",
+            "value": true
+        },
+        {
+            "source_domain": {
+                "type": "Microwave",
+                "has_attr": {}
+            },
+            "premise_attr": "isToggled",
+            "premise_value": true,
+            "on_attr": "temperature",
+            "value": "Hot"
+        },
+        {
+            "source_domain": {
                 "type": "CoffeeMachine",
                 "has_attr": {}
             },

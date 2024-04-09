@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from ast import Param
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional, Tuple
@@ -30,15 +29,9 @@ class InWorldAction(Action, EnforceOverrides):
     @override
     def make_info(self):
         info = super().make_info()
-        # Only expose index
-        id_keys = set(filter(lambda x: x.endswith("_id"), info.keys()))
-        for k in id_keys:
-            try:
-                info[k[:-3]] = self.world.object_name2index(info[k])
-                info.pop(k)
-            except KeyError:
-                # If the key is wrong, just return it as is.
-                pass
+        for k, v in info.items():
+            if isinstance(v, Object2D):
+                info[k] = self.world.object_name2index(v.name)
         return info
 
 
@@ -87,20 +80,21 @@ class BasicTurn2D(InWorldAction):
 
 @dataclass
 class InteractAction(InWorldAction):
-    object_id: str
+    object_index: str
     object: Object2D = field(init=False)
 
     @override
     def _executable_assert(self):
         super()._executable_assert()
         try:
-            self.object = self.world.get_object(self.object_id)
-        except ParameterMissingError:
-            raise ParameterMissingError({"object": self.object_id})
+            self.object = self.world.get_object(self.object_index)
+        except ParameterMissingError as e:
+            raise e
         dist = self.world.distance_to_pos(self.agent, self.object)
         if not self.world.can_observe(self.agent, self.object):
-            raise IllegalActionError({"object": self.object_id})
+            raise IllegalActionError({"object": self.object_index})
         if dist.modulus > self.agent.max_manipulate_distance:
+            print(dist.modulus, self.agent.max_manipulate_distance)
             raise UnexecutableWithSptialError({"distance": dist.modulus})
 
 
@@ -113,7 +107,7 @@ class PickUp2D(InteractAction):
             if self.object in self.agent.inventory:
                 raise InvalidActionError(
                     {
-                        "object": self.object_id,
+                        "object": self.object_index,
                         "inventory": ",".join(
                             map(
                                 self.world.object_name2index,
@@ -163,7 +157,7 @@ class Drop2D(InteractAction):
         try:
             super()._executable_assert()
         except (UnexecutableWithSptialError, IllegalActionError) as e:
-            logging.logger.debug(f"{self.object_id} {e.param_dict}")
+            logging.logger.debug(f"{self.object_index} {e.param_dict}")
             # Do not need to care the distance of an invertory
             pass
         if self.object._locate_at.receptacle != self.agent:
@@ -186,7 +180,7 @@ class Drop2D(InteractAction):
 
 @dataclass
 class Put2D(InteractAction):
-    receptacle_id: str
+    receptacle_index: str
     receptacle: Object2D = field(init=False)
     force: bool = True
     # Need to check object type if not force
@@ -196,7 +190,7 @@ class Put2D(InteractAction):
         try:
             super()._executable_assert()
         except (UnexecutableWithSptialError, IllegalActionError) as e:
-            logging.logger.debug(f"{self.object_id} {e.param_dict}")
+            logging.logger.debug(f"{self.object_index} {e.param_dict}")
             # Do not need to care the distance of an invertory
             pass
         if self.object._locate_at.receptacle != self.agent:
@@ -204,14 +198,14 @@ class Put2D(InteractAction):
                 {"inventory": self.world.make_id_list(self.agent.inventory)}
             )
         try:
-            self.receptacle = self.world.get_object(self.receptacle_id)
+            self.receptacle = self.world.get_object(self.receptacle_index)
         except ParameterMissingError as e:
             raise e
         dist = self.world.distance_to_pos(self.agent, self.receptacle)
         if dist.modulus > self.agent.max_manipulate_distance:
             raise UnexecutableWithSptialError({"distance": dist.modulus})
         if not self.world.can_observe(self.agent, self.receptacle):
-            raise IllegalActionError({"object": self.object_id})
+            raise IllegalActionError({"object": self.object_index})
         if not self.receptacle.receptacle:
             raise UnexecutableWithAttrError({"attr": "isReceptacle"})
         if getattr(self.receptacle, "isOpen", None) is False:
@@ -265,7 +259,7 @@ class SwitchBoolAttr(InteractAction):
 @dataclass
 class SetBoolAttrWith(InteractAction):
     # It is not receptacle, just an extra object. this is for automatic init, don't change the name.
-    receptacle_id: str
+    receptacle_index: str
     receptacle: Object2D = field(init=False)
 
     @property
@@ -392,3 +386,29 @@ class Cool(SetBoolAttrWith):
             or getattr(self.receptacle, "isColdSource")
         ):
             raise UnexecutableWithAttrError({"premise_obj": self.receptacle.obj_type})
+
+# class GoTo(InteractAction):
+#     @override
+#     def _exec(self) -> Tuple[bool, Dict[str, object]]:
+#         # FIXME only work with single room
+#         it = iter(self.world.rooms.values())
+#         next(it)
+#         room = next(it)
+#         grid_world = GridWorld(room.geometry, self.agent.step_size)
+#         for x in self.world._objects.values():
+#             grid_world.add_object(x)
+#         grid_world.get_path(self.agent.position, self.object.position)
+
+#         return (
+#             True,
+#             {
+#                 "inventory": ",".join(
+#                     map(
+#                         self.world.object_name2index,
+#                         map(lambda x: x.name, self.agent.inventory),
+#                     )
+#                 )
+#             },
+#         )
+
+

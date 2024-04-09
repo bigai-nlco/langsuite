@@ -1,9 +1,10 @@
 from typing import ClassVar, Dict, List, Set, Tuple
 from attr import dataclass
 from overrides import override
-from langsuite.suit import TaskStatus
+from langsuite.suit import TaskStatus, world
 from langsuite.suit.message import Message
 from langsuite.worlds.basic2d_v0.message_handler import Basic2DHandler
+from langsuite.worlds.basic2d_v0.world import Basic2DWorld_V0
 
 @dataclass
 class AlfredStatus(TaskStatus):
@@ -15,6 +16,7 @@ class AlfredStatus(TaskStatus):
 
 @dataclass
 class AlfredHandler(Basic2DHandler):
+    world: Basic2DWorld_V0
     action_name_map: Dict[str, str]
     ACTIONS_WITH_NO_ARGS: Set[str] = {"move_ahead", "turn_left", "turn_right"}
     ACTIONS_WITH_ONE_ARG: Set[str] = {
@@ -49,13 +51,16 @@ class AlfredHandler(Basic2DHandler):
         if action_id == 'Stop':
             action_dict['task_type'] = self.task_type
             action_dict['target_status'] = self.target_status
+            action_dict['answer'] = 'n/a'
             args = ' [n/a]'
         if 'objectId' in action['api_action']:
             object_id = action['api_action']['objectId']
-            action_dict['object_id'] = object_id
+            print(object_id)
+            print(self.world.object_name2index(object_id))
+            action_dict['object_index'] = self.world.object_name2index(object_id)
             if 'receptacleObjectId' in action['api_action']:
                 receptacle_id = action['api_action']['receptacleObjectId']
-                action_dict["receptacle_id"] = receptacle_id
+                action_dict["receptacle_index"] = self.world.object_name2index(receptacle_id)
                 args = f' [{object_id}, {receptacle_id}]'
             else:
                 args = f' [{object_id}]'

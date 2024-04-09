@@ -1,10 +1,7 @@
-from tkinter.font import ROMAN
 from typing import Dict, Tuple
 from attr import dataclass
 
-from numpy import fix
 from overrides import override
-from langsuite.shapes import Point2D
 from langsuite.suit import (
     IllegalActionError,
     InvalidActionError,
@@ -95,12 +92,12 @@ class OpenObject(TaskActionWrapper):
         return self._wrapped_action
 
     def __init__(
-        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_id: str
+        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_index: str
     ) -> None:
         self._wrapped_action = SwitchBoolAttr(
             agent=agent,
             world=world,
-            object_id=object_id,
+            object_index=object_index,
             attr_name="isOpen",
             expect_val=False,
         )
@@ -126,12 +123,12 @@ class CloseObject(TaskActionWrapper):
         return self._wrapped_action
 
     def __init__(
-        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_id: str
+        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_index: str
     ) -> None:
         self._wrapped_action = SwitchBoolAttr(
             agent=agent,
             world=world,
-            object_id=object_id,
+            object_index=object_index,
             attr_name="isOpen",
             expect_val=True,
         )
@@ -145,9 +142,9 @@ class DropObject(TaskActionWrapper):
     }
 
     def __init__(
-        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_id: str
+        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_index: str
     ) -> None:
-        self._wrapped_action = Drop2D(agent=agent, world=world, object_id=object_id)
+        self._wrapped_action = Drop2D(agent=agent, world=world, object_index=object_index)
 
     @property
     @override
@@ -167,14 +164,14 @@ class PutObject(TaskActionWrapper):
         self,
         agent: PhysicalAgent,
         world: Basic2DWorld_V0,
-        object_id: str,
-        receptacle_id: str,
+        object_index: str,
+        receptacle_index: str,
     ) -> None:
         self._wrapped_action = Put2D(
             agent=agent,
             world=world,
-            object_id=object_id,
-            receptacle_id=receptacle_id,
+            object_index=object_index,
+            receptacle_index=receptacle_index,
             force=True,
         )
 
@@ -218,7 +215,7 @@ class Stop(TaskAction):
             next(it)  # drop ground
             room_name = next(it).name
 
-            obj = self.world.get_object(obj_name)
+            obj = self.world._objects[obj_name]
             tar_rec = self.target_status.target_rec.get(obj_name, room_name)
             cur_rec = obj._locate_at.receptacle.name
             rec_type = obj._locate_at.receptacle.__class__

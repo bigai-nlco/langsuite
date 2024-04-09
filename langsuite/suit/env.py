@@ -64,25 +64,21 @@ class LangSuiteEnv(ParallelEnv):
         # TODO check if agent stopped
         for agent_id, agent in self.agents.items():
             if agent_id in actions:
-                try:
-                    action_dict = agent.make_decision(actions[agent_id])
-                    #Just a thought, load action.
-                    if len(action_dict) == 0:
-                        action_dict = agent.make_decision('OK.')
-                    #Stop after decision, because it should know that it is stopped.
-                    if not agent.stopped:
-                        self._step_count[agent_id] += 1
-                        _, feedback = self.world.step(agent_id, action_dict)
-                        feedback_dict[agent_id] = feedback
-                        if feedback_dict[agent_id]["action"] == "Stop":
-                            agent.pre_stop()
-                            self._rewards[agent_id] = feedback_dict[agent_id]['reward']
-                    else:
-                        logging.logger.info('%s stops', agent_id)
-                        self._terminated[agent_id] = True
-                except StructuredException as e:
-                    feedback_dict[agent_id] = e.param_dict
-                    feedback_dict[agent_id]["error_type"] = type(e)
+                action_dict = agent.make_decision(actions[agent_id])
+                #Just a thought, load action.
+                if len(action_dict) == 0:
+                    action_dict = agent.make_decision('OK.')
+                #Stop after decision, because it should know that it is stopped.
+                if not agent.stopped:
+                    self._step_count[agent_id] += 1
+                    _, feedback = self.world.step(agent_id, action_dict)
+                    feedback_dict[agent_id] = feedback
+                    if feedback_dict[agent_id]["action"] == "Stop":
+                        agent.pre_stop()
+                        self._rewards[agent_id] = feedback_dict[agent_id]['reward']
+                else:
+                    logging.logger.info('%s stops', agent_id)
+                    self._terminated[agent_id] = True
 
         #TODO Theoratially, ParallelEnv should update after all executions, currently our update may simplifies it, we didn't force step to not update things.
         self.world.update()

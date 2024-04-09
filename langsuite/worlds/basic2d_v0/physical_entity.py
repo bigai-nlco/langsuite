@@ -1,16 +1,14 @@
 from abc import ABC, abstractmethod
-from collections import defaultdict
 import copy
-from os import name
 import random
 import re
-from typing import Dict, List, Set
+from typing import Dict, Set
 from dataclasses import dataclass
-from networkx import radius
 from overrides import EnforceOverrides, override
 from plotly.graph_objects import Figure, Scatter
 from langsuite.constants import CSS4_COLORS
-from langsuite.utils import logging, math_utils
+from langsuite.utils import math_utils
+from langsuite.utils.logging import logger
 import numpy as np
 import langsuite.worlds.basic2d_v0.utils as WUtils
 from langsuite.shapes import Cone2D, Geometry, Line2D, Point2D, Polygon2D, Vector2D
@@ -53,11 +51,13 @@ class PhysicalEntity2D(ABC, EnforceOverrides):
     def render(self, fig: Figure, label: str):
         pass
 
+
 @dataclass(frozen=True)
 class LocateAt:
     receptacle: PhysicalEntity2D
     timestamp: int
     distance: Point2D
+
 
 @dataclass
 class Wall2D:
@@ -82,8 +82,7 @@ class Room2D(PhysicalEntity2D):
         coords = self._geometry.coords
         length = len(coords)
         self._walls = [
-            Wall2D(Line2D([coords[i], coords[(i + 1) % length]]))
-            for i in range(length)
+            Wall2D(Line2D([coords[i], coords[(i + 1) % length]])) for i in range(length)
         ]
 
     @property
@@ -113,7 +112,7 @@ class Room2D(PhysicalEntity2D):
     @override
     def list_textual_attrs(self) -> Dict[str, object]:
         return {"type": "Room"}
-    
+
     @override
     def render(self, fig: Figure, label: str):
         x, y = self.geometry.shapely_geo.exterior.xy
@@ -127,6 +126,7 @@ class Room2D(PhysicalEntity2D):
                 line=dict(color="gray"),
             )
         )
+
 
 class Object2D(PhysicalEntity2D):
     colorscales = list(CSS4_COLORS.keys())
@@ -205,14 +205,14 @@ class Object2D(PhysicalEntity2D):
         self._locate_at = locate_at
         locate_at.receptacle.inventory.add(self)
         self._position = self._locate_at.receptacle.position + self._locate_at.distance
-        self._shape = Polygon2D(transform(
-            geometry, lambda x: x - [self._position.x, self._position.y]
-        ))
+        self._shape = Polygon2D(
+            transform(geometry, lambda x: x - [self._position.x, self._position.y])
+        )
         self._geometry = Polygon2D(geometry)
         try:
             assert self._shape.shapely_geo.buffer(1e-6).contains(Point(0, 0))
         except AssertionError as e:
-            logging.logger.error(
+            logger.error(
                 "%s: %s. \n\tGeo: %s\n\tShape: %s\n\tPosition: %s",
                 self.name,
                 e,
@@ -254,7 +254,7 @@ class Object2D(PhysicalEntity2D):
             if attr is not None and getattr(self, attr) != f.get("premise_value", True):
                 continue
             if hasattr(obj, f["on_attr"]):
-                if 'value' in f:
+                if "value" in f:
                     setattr(obj, f["on_attr"], f["value"])
                 else:
                     setattr(obj, f["on_attr"], getattr(self, f["on_attr"]))
@@ -285,7 +285,7 @@ class Object2D(PhysicalEntity2D):
             if getattr(self, f["premise_attr"]) != f.get("premise_value", True):
                 continue
             if hasattr(new_receptacle, f["on_attr"]):
-                if 'value' in f:
+                if "value" in f:
                     setattr(new_receptacle, f["on_attr"], f["value"])
                 else:
                     setattr(new_receptacle, f["on_attr"], getattr(self, f["on_attr"]))
@@ -295,6 +295,7 @@ class Object2D(PhysicalEntity2D):
         # I don't think the data quality is good enough to do such check
         # old_val = getattr(self, attr_name)
         # assert old_val is None or isinstance(val, type(old_val))
+        logger.debug(f"Set {attr_name} of {self.name} as {val}")
         setattr(self, attr_name, val)
 
         for f in self._receptacle_function:
@@ -302,7 +303,7 @@ class Object2D(PhysicalEntity2D):
                 continue
             for obj in self.inventory:
                 if hasattr(obj, f["on_attr"]):
-                    if 'value' in f:
+                    if "value" in f:
                         setattr(obj, f["on_attr"], f["value"])
                     else:
                         setattr(obj, f["on_attr"], getattr(self, f["on_attr"]))
@@ -311,10 +312,14 @@ class Object2D(PhysicalEntity2D):
             if f["premise_attr"] != attr_name or f.get("premise_value", True) != val:
                 continue
             if hasattr(self._locate_at.receptacle, f["on_attr"]):
-                if 'value' in f:
+                if "value" in f:
                     setattr(self._locate_at.receptacle, f["on_attr"], f["value"])
                 else:
-                    setattr(self._locate_at.receptacle, f["on_attr"], getattr(self, f["on_attr"]))
+                    setattr(
+                        self._locate_at.receptacle,
+                        f["on_attr"],
+                        getattr(self, f["on_attr"]),
+                    )
 
     @override
     def list_textual_attrs(self) -> Dict[str, object]:
@@ -334,10 +339,11 @@ class Object2D(PhysicalEntity2D):
                 fill="toself",
                 fillcolor=self.color_registry.get(self.obj_type),
                 name=f"{label} ({self.name})",
-                mode='lines',
+                mode="lines",
                 line=dict(width=0),
             )
         )
+
 
 class PhysicalAgent(PhysicalEntity2D):
     def __init__(
@@ -366,16 +372,16 @@ class PhysicalAgent(PhysicalEntity2D):
         self.right_degree = self.view_angle / 2
 
     def update_config(self, config):
-        if 'focal_length' in config:
-            self.focal_length = config['focal_length']
-            self.view_angle = math_utils.compute_horizonal_aov(config['focal_length'])
-        if 'step_size' in config:
-            self.step_size = config['step_size']
-        if 'max_view_distance' in config:
-            self.max_view_distance = config['max_view_distance']
+        if "focal_length" in config:
+            self.focal_length = config["focal_length"]
+            self.view_angle = math_utils.compute_horizonal_aov(config["focal_length"])
+        if "step_size" in config:
+            self.step_size = config["step_size"]
+        if "max_view_distance" in config:
+            self.max_view_distance = config["max_view_distance"]
             self.max_view_steps = self.max_view_distance / self.step_size
-            #TODO XXX they should be set seperately?
-            self.max_manipulate_distance = config['max_view_distance']
+            # TODO XXX they should be set seperately?
+            self.max_manipulate_distance = config["max_view_distance"]
 
     @property
     def name(self):
@@ -406,7 +412,6 @@ class PhysicalAgent(PhysicalEntity2D):
     def list_textual_attrs(self) -> Dict[str, object]:
         return {"type": "Agent"}
 
-
     @override
     def render(self, fig: Figure, label: str):
         radius = 0.05
@@ -423,7 +428,6 @@ class PhysicalAgent(PhysicalEntity2D):
             x1=self.position.x + radius,
             y1=self.position.y + radius,
             fillcolor="orange",
-            name=label, #TODO Why this not work?
+            name=label,  # TODO Why this not work?
             line=dict(width=0),
         )
-    

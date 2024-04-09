@@ -29,8 +29,7 @@ from langsuite.worlds.basic2d_v0.physical_entity import (
 
 
 class MoveAhead(TaskActionWrapper):
-    name: str = "move_ahead"
-    
+    name: str = "move_ahead"  
     status_map: Dict[type, str] = {IllegalActionError: "failure.isBlocked"}
 
     @property
@@ -93,9 +92,9 @@ class PickupObject(TaskActionWrapper):
         return self._wrapped_action
 
     def __init__(
-        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_id: str
+        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_index: str
     ) -> None:
-        self._wrapped_action = PickUp2D(agent=agent, world=world, object_id=object_id)
+        self._wrapped_action = PickUp2D(agent=agent, world=world, object_index=object_index)
 
     @property
     @override
@@ -111,9 +110,9 @@ class DropObject(TaskActionWrapper):
     }
 
     def __init__(
-        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_id: str
+        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_index: str
     ) -> None:
-        self._wrapped_action = Drop2D(agent=agent, world=world, object_id=object_id)
+        self._wrapped_action = Drop2D(agent=agent, world=world, object_index=object_index)
 
     @property
     @override
@@ -132,14 +131,14 @@ class PutObject(TaskActionWrapper):
         self,
         agent: PhysicalAgent,
         world: Basic2DWorld_V0,
-        object_id: str,
-        receptacle_id: str,
+        object_index: str,
+        receptacle_index: str,
     ) -> None:
         self._wrapped_action = Put2D(
             agent=agent,
             world=world,
-            object_id=object_id,
-            receptacle_id=receptacle_id,
+            object_index=object_index,
+            receptacle_index=receptacle_index,
             force=True,
         )
 
@@ -165,12 +164,12 @@ class OpenObject(TaskActionWrapper):
         return self._wrapped_action
 
     def __init__(
-        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_id: str
+        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_index: str
     ) -> None:
         self._wrapped_action = SwitchBoolAttr(
             agent=agent,
             world=world,
-            object_id=object_id,
+            object_index=object_index,
             attr_name="isOpen",
             expect_val=False,
         )
@@ -196,12 +195,12 @@ class CloseObject(TaskActionWrapper):
         return self._wrapped_action
 
     def __init__(
-        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_id: str
+        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_index: str
     ) -> None:
         self._wrapped_action = SwitchBoolAttr(
             agent=agent,
             world=world,
-            object_id=object_id,
+            object_index=object_index,
             attr_name="isOpen",
             expect_val=True,
         )
@@ -220,12 +219,12 @@ class ToggleObjectOn(TaskActionWrapper):
         return self._wrapped_action
 
     def __init__(
-        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_id: str
+        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_index: str
     ) -> None:
         self._wrapped_action = SwitchBoolAttr(
             agent=agent,
             world=world,
-            object_id=object_id,
+            object_index=object_index,
             attr_name="isToggled",
             expect_val=False,
         )
@@ -245,12 +244,12 @@ class ToggleObjectOff(TaskActionWrapper):
         return self._wrapped_action
 
     def __init__(
-        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_id: str
+        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_index: str
     ) -> None:
         self._wrapped_action = SwitchBoolAttr(
             agent=agent,
             world=world,
-            object_id=object_id,
+            object_index=object_index,
             attr_name="isToggled",
             expect_val=True,
         )
@@ -272,12 +271,12 @@ class SliceObject(TaskActionWrapper):
         return self._wrapped_action
 
     def __init__(
-        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_id: str
+        self, agent: PhysicalAgent, world: Basic2DWorld_V0, object_index: str
     ) -> None:
         self._wrapped_action = SwitchBoolAttr(
             agent=agent,
             world=world,
-            object_id=object_id,
+            object_index=object_index,
             attr_name="isSliced",
             expect_val=False,
             premise_obj="Knife"
@@ -292,10 +291,13 @@ class Stop(TaskAction):
     answer: Any
     name: ClassVar[str] = "Stop"
 
+    def _type_match(self, source, target, need_slice):
+        return source == target or (need_slice and (source == f'{target}Sliced' or source == f'{target}Cracked'))
+
     def look_at_obj_in_light(self) -> bool:
         look_at = any(
             isinstance(obj, Object2D)
-            and obj.obj_type == self.target_status.object_target
+            and self._type_match(obj.obj_type, self.target_status.object_target, need_slice=False)
             for obj in self.agent.inventory
         )
         in_light = self.world.exists_in_obs(
@@ -307,9 +309,9 @@ class Stop(TaskAction):
     def _placed_at(
         self, obj: Object2D, obj_type: str, rec_type: str, need_slice: bool
     ) -> bool:
-        self_type_match = obj.obj_type == obj_type
+        self_type_match = self._type_match(obj.obj_type, obj_type, need_slice)
         recept_type_match = (
-            getattr(obj._locate_at.receptacle, "obj_type", None) == rec_type
+            self._type_match(getattr(obj._locate_at.receptacle, "obj_type", None), rec_type, need_slice=False)
         )
         slice_match = (not need_slice) or getattr(obj, "isSliced", False) is True
         if (self_type_match and recept_type_match and slice_match):
