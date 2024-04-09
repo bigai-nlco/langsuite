@@ -2,18 +2,12 @@
 # Licensed under the MIT license.
 from __future__ import annotations
 
-import json
 import logging
-import os
 import random
-from tabnanny import verbose
 import traceback
 from datetime import datetime
-from pathlib import Path
-from langsuite.cli import cmd_cli
 
 from langsuite.cli.cmd_cli import CMDClient, GameEndException
-from langsuite.constants import WORKSPACE_PATH
 from langsuite.tasks.alfred_v0.task import AlfredTask_V0
 from langsuite.utils import io_utils
 from langsuite.utils.logging import logger
@@ -32,7 +26,7 @@ def run_cmd_cli(
 ) -> int:
     task_id = task_data['path'].split("/")[-2]
     task_data['log_file'] = f"alfred_{stage}/{task_id}.jl"
-   
+  
     task = create_from_config(task_or_config, task_data, cmd_cli)
 
     answer = 0
@@ -49,7 +43,7 @@ def run_cmd_cli(
         pass
     finally:
         cmd_cli.end_task()
-    
+  
     return answer
 
 def main():
@@ -59,17 +53,18 @@ def main():
     logger.set_log_file(
         f"logs/alfred_{stage}/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log')}"
     )
-    logger.setLevel("ERROR")
+    logger.setLevel("INFO")
     index = 0
     # memory_path = "./scripts/test/alfred_test/memory_1.txt"
-    cmd_cli = CMDClient(verbose=False, log_level=logging.ERROR)
+    cmd_cli = CMDClient(verbose=False, log_level=logging.WARNING)
 
     tasks_data = AlfredTask_V0.load_data(data_path, stage)
     # print(len(tasks_data))
+    random.seed(0)
     random.shuffle(tasks_data)
     count = 0
     right = 0
-    for task_data in tasks_data[:5]:
+    for task_data in tasks_data[:200]:
         print("***********", count+index)
         count+=1
         try:
