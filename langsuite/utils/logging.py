@@ -61,7 +61,7 @@ class Logger(logging.getLoggerClass(), metaclass=LoggerSingleton):
         self._cmd = cmd_cli
         if disable_console_logging:
             for hdlr in self.handlers:
-                if isinstance(hdlr, logging.StreamHandler) or isinstance(hdlr, type(cmd_cli._handler)):
+                if isinstance(hdlr, type(cmd_cli._handler)):
                     self.removeHandler(hdlr)
 
             self.console_logging = not disable_console_logging
@@ -75,12 +75,5 @@ class Logger(logging.getLoggerClass(), metaclass=LoggerSingleton):
             fileHandler.setFormatter(self.logFormatter)
             fileHandler.setLevel(self.log_level)
             self.addHandler(fileHandler)
-
-    def close(self):
-        # if self._cmd_log_file:
-        #     self._cmd_log_file.close()
-
-        if self._cmd:
-            self._cmd.end_task()    
 
 logger = Logger()
