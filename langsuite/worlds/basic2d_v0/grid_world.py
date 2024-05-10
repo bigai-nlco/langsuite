@@ -1,32 +1,30 @@
 from __future__ import annotations
 
-from ast import Break
-from dataclasses import dataclass
-import enum
 import heapq
-import math
-from collections import deque
-from optparse import Option
-from typing import Optional, Set, Tuple
+from typing import Dict, Optional, Tuple
 import numpy as np
 
-import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
 
-from langsuite.shapes import Point2D, Polygon2D
+from langsuite.shapes import Point2D, Polygon2D, Vector2D
+from langsuite.suit.exceptions import UnexecutableWithSptialError
 from langsuite.worlds.basic2d_v0.physical_entity import Object2D
 
 
-class AstarState():
-    def __init__(self, x, y, last: Optional[AstarState], targets: Set[Tuple[int, int]]) -> None:
+class AstarState:
+    def __init__(
+        self, x, y, d, last: Optional[AstarState], targets: Dict[Tuple[int, int], int]
+    ) -> None:
         self.x = x
         self.y = y
-        self.h = min(abs(x_t - x) + abs(y_t - y) for x_t, y_t in targets)
+        self.d = d
+        self.last = last
+        self.h = min(abs(x_t - x) + abs(y_t - y) for (x_t, y_t) in targets)
         self.g = last.g + 1 if last is not None else 0
         self.f = self.g + self.h
 
-    def __le__(self, other: Optional['AstarState']):
-        return (other is None) or self.f <= other.f
+    def __lt__(self, other: Optional["AstarState"]):
+        return (other is None) or self.f < other.f
+
 
 # TODO only support single room now.
 class GridWorld:
@@ -56,35 +54,65 @@ class GridWorld:
         y_min_idx = int((y_min - self.y_min) / self.grid_step_length)
         y_max_idx = int((y_max - self.y_min - 1e-5) / self.grid_step_length) + 1
 
-        self.grids[x_min_idx:x_max_idx+1, y_min_idx:y_max_idx+1] = True
+        self.grids[x_min_idx : x_max_idx + 1, y_min_idx : y_max_idx + 1] = True
 
-    def is_valid_pos(self, x, y):
+    def _is_valid_pos(self, x, y):
         return (0 <= x < self.x_len) and (0 <= y < self.y_len)
 
-    def get_candidate_ends(self, x: int, y: int):
+    def _get_candidate_ends(self, x: int, y: int):
         for i in range(4):
             j = 0
             x_c, y_c = x, y
-            while self.is_valid_pos(x_c, y_c)  and j < self.step_limit:
+            while self._is_valid_pos(x_c, y_c) and j < self.step_limit:
+                if not self.grids[x_c][y_c]:
+                    yield ((x_c, y_c), (i + 2) % 4)
                 x_c += self.D_X[i]
                 y_c += self.D_Y[i]
                 j += 1
-                if not self.grids[x_c][y_c]:
-                    yield (x_c, y_c)
 
-  
-    def get_next_states(self, st: AstarState, targets: Set[Tuple[int, int]]):
+    def _get_next_states(self, st: AstarState, targets: Dict[Tuple[int, int], int]):
         for i in range(4):
             n_x = st.x + self.D_X[i]
             n_y = st.y + self.D_Y[i]
-            if self.is_valid_pos(n_x, n_y):
-                yield(AstarState(n_x, n_y, st, targets))
+            if self._is_valid_pos(n_x, n_y):
+                yield (AstarState(n_x, n_y, i, st, targets))
 
-    def differentiate_path(self, st: AstarState):
+    def _differentiate_path(self, st: AstarState, direction: int) -> list[str]:
+        def add_turn(d) -> list[str]:
+            if d == 1:
+                return ["turn_left"]
+            elif d == 2:
+                return ["turn_left", "turn_left"]
+            elif d == 3:
+                return ["turn_right"]
+            else:
+                raise NotImplementedError("no such direction!")
+
+        paths = []
+        if st.d != direction:
+            paths.extend(add_turn(abs(direction - st.d)))
+        while st.last is not None:
+            for i in range(4):
+                l_x = st.x - self.D_X[i]
+                l_y = st.y - self.D_Y[i]
+                if (l_x, l_y) == (st.last.x, st.last.y):
+                    if i != st.d:
+                        paths.extend(add_turn(abs(st.d - i)))
+                    paths.append("move_ahead")
+            st = st.last
+        paths = reversed(paths)
+        return list(paths)
+
+    def _get_direction_id(self, vec_dir: Vector2D):
         for i in range(4):
-            
+            if (
+                abs(vec_dir.x - self.D_X[i]) < 0.1
+                and abs(vec_dir.y - self.D_Y[i]) < 0.1
+            ):
+                return i
+        raise NotImplementedError("Only support UDLR directions.")
 
-    def get_path(self, start_pos: Point2D, target_pos: Point2D, direction, grid):
+    def get_path(self, start_pos: Point2D, start_dir: Vector2D, target_pos: Point2D):
         x1, y1 = int((start_pos.x - self.x_min) / self.grid_step_length), int(
             (start_pos.y - self.y_min) / self.grid_step_length
         )
@@ -92,193 +120,35 @@ class GridWorld:
             (target_pos.y - self.y_min) / self.grid_step_length
         )
         self.grids[x2][y2] = True
-        ends = set(self.get_candidate_ends(x2, y2))
+        ends = {p: d for p, d in self._get_candidate_ends(x2, y2)}
         queue = []
-        heapq.heappush(queue, AstarState(x1, y1, None, ends))
+        heapq.heappush(
+            queue, AstarState(x1, y1, self._get_direction_id(start_dir), None, ends)
+        )
         visited = np.zeros((self.x_len, self.y_len), dtype=bool)
+        visited[x2][y2] = True
         ans = None
-        while len(ends) > 0:
+        while len(ends) > 0 and len(queue) > 0:
             u: AstarState = heapq.heappop(queue)
-            if u <= ans:
+            if not u < ans:
                 break
-            if self.grids[u.x][u.y]:
-                ans = u
-                continue
             visited[u.x][u.y] = True
             if (u.x, u.y) in ends:
                 ans = u
-            for v in self.get_next_states(u, ends):
+                continue
+            for v in self._get_next_states(u, ends):
                 if not visited[v.x][v.y]:
                     heapq.heappush(queue, v)
+        if ans is None:
+            raise UnexecutableWithSptialError({"path": "no avail path"})
+        
+        end_d = ends[(ans.x, ans.y)]
+        path = self._differentiate_path(ans, end_d)
 
-        path = self.differentiate_path(ans)
-
-
-
-def point_traj_2action_traj(points, direction, grid_step_length=1):
-    # x1, y1 = points[0]
-    y1, x1 = points[0]
-    path = []
-    for point in points[1:]:
-        # x2 ,y2 = point
-        y2, x2 = point
-        dx = x2 - x1
-        dy = y2 - y1
-        rotate_flag = True
-        while rotate_flag:
-            if direction == "up":
-                if dy > 0:
-                    path.append("MoveAhead")
-                    y1 += grid_step_length
-                    dy -= grid_step_length
-                    rotate_flag = False
-                elif dy < 0:
-                    path.append("TurnLeft")
-                    path.append("TurnLeft")
-                    direction = "down"
-                elif dx > 0:
-                    path.append("TurnRight")
-                    direction = "right"
-                elif dx < 0:
-                    path.append("TurnLeft")
-                    direction = "left"
-            elif direction == "down":
-                if dy < 0:
-                    path.append("MoveAhead")
-                    y1 -= grid_step_length
-                    dy += grid_step_length
-                    rotate_flag = False
-                elif dy > 0:
-                    path.append("TurnLeft")
-                    path.append("TurnLeft")
-                    direction = "up"
-                elif dx > 0:
-                    path.append("TurnLeft")
-                    direction = "right"
-                elif dx < 0:
-                    path.append("TurnRight")
-                    direction = "left"
-            elif direction == "left":
-                if dx < 0:
-                    path.append("MoveAhead")
-                    x1 -= grid_step_length
-                    dx += grid_step_length
-                    rotate_flag = False
-                elif dx > 0:
-                    path.append("TurnLeft")
-                    path.append("TurnLeft")
-                    direction = "right"
-                elif dy > 0:
-                    path.append("TurnRight")
-                    direction = "up"
-                elif dy < 0:
-                    path.append("TurnLeft")
-                    direction = "down"
-            elif direction == "right":
-                if dx > 0:
-                    path.append("MoveAhead")
-                    x1 += grid_step_length
-                    dx -= grid_step_length
-                    rotate_flag = False
-                elif dx < 0:
-                    path.append("TurnLeft")
-                    path.append("TurnLeft")
-                    direction = "left"
-
-                elif dy > 0:
-                    path.append("TurnLeft")
-                    direction = "up"
-                elif dy < 0:
-                    path.append("TurnRight")
-                    direction = "down"
-    return path
-
-
-class Node:
-    def __init__(self, position, parent=None):
-        self.position = position
-        self.parent = parent
-        self.g = 0
-        self.h = 0
-        self.f = 0
-
-    def __lt__(self, other):
-        return self.f < other.f
-
-
-def heuristic(node, goal):
-    dx = abs(node.position[0] - goal.position[0])
-    dy = abs(node.position[1] - goal.position[1])
-    return math.sqrt(dx**2 + dy**2)
-
-
-def get_neighbours(node, grid):
-    neighbours = []
-    # Directions: up, down, right, left
-    dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-    for dir in dirs:
-        neighbour_pos = (node.position[0] + dir[0], node.position[1] + dir[1])
-        if (
-            neighbour_pos[0] < 0
-            or neighbour_pos[0] >= len(grid)
-            or neighbour_pos[1] < 0
-            or neighbour_pos[1] >= len(grid[0])
-        ):
-            continue
-        # obstacles
-        if grid[neighbour_pos[0]][neighbour_pos[1]] == 1:
-            continue
-        neighbour_node = Node(neighbour_pos, node)
-        neighbours.append(neighbour_node)
-    return neighbours
-
-
-
-
-def cal_wall_min_max(wall_list):
-    x_min, x_max, y_min, y_max = (
-        float("inf"),
-        -float("inf"),
-        float("inf"),
-        -float("inf"),
-    )
-    for x, y in wall_list:
-        if x < x_min:
-            x_min = x
-        if x > x_max:
-            x_max = x
-        if y < y_min:
-            y_min = y
-        if y > y_max:
-            y_max = y
-    return x_min, x_max, y_min, y_max
-
-
-def get_direction(view_vector):
-    x, y = round(view_vector.x), round(view_vector.y)
-    direction = None
-    if x > 0:
-        direction = "right"
-    elif x < 0:
-        direction = "left"
-    elif y > 0:
-        direction = "up"
-    elif y < 0:
-        direction = "down"
-    return direction
-
-
-def get_relative_direction(x1, y1, x2, y2):
-    dx = x2 - x1
-    dy = y2 - y1
-
-    if abs(dx) > abs(dy):
-        if dx < 0:
-            return "right"
-        else:
-            return "left"
-    else:
-        if dy > 0:
-            return "down"
-        else:
-            return "up"
+        position = Point2D(
+            start_pos.x + (ans.x - x1) * self.grid_step_length,
+            start_pos.y + (ans.y - y1) * self.grid_step_length,
+        )
+        direction = Vector2D(self.D_X[end_d], self.D_Y[end_d])
+        
+        return position, direction, path

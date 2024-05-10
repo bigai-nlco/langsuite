@@ -35,6 +35,7 @@ class ChatAgent(LangSuiteAgent):
         self.template = agent_data["template"]
         self.from_user = agent_data.get("from_user", False)
         self.debug = agent_data.get("debug", False)
+        self.hl = agent_data.get("high_level", False)
         if not self.from_user:
             if not self.debug:
                 self.llm = create_llm(agent_data.get("llm"))
@@ -97,12 +98,19 @@ class ChatAgent(LangSuiteAgent):
             else:
                 raise e
 
+        if 'memory' in extra_info:
+            task_description = f"{task_description};\nYou failed last time, the reflexion memory is: {extra_info['memory']}"
+        if self.hl:
+            # HACK
+            observation = self.world.get_look_around_observation(self.name)
+        else:
+            observation = self.world.get_observation(self.name)
         semantic_fb_obs = (
             {
                 "task_description": task_description,
                 "action": "Start",
             },
-            self.world.get_observation(self.name),
+            observation,
         )
         logger.debug("obs=%s", self.pack(semantic_fb_obs))
         return self.pack(semantic_fb_obs)
@@ -134,7 +142,10 @@ class ChatAgent(LangSuiteAgent):
             if key == "observation":
                 template = template.replace("{observation}", self.pack_observation(sem_obs))  # type: ignore
             else:
-                assert key in sem_feedback
+                try:
+                    assert key in sem_feedback
+                except AssertionError:
+                    logger.error(f"key {key} not in feedback: {sem_feedback}")
                 template = template.replace("{" + key + "}", str(sem_feedback[key]))  # type: ignore
         return template  # type: ignore
 

@@ -1,11 +1,8 @@
 from abc import abstractmethod
-from email import message
 import re
 from typing import List, Optional, Tuple
-from dataclasses import dataclass
-from git import Tree
 from overrides import override
-from langsuite.suit import InvalidActionError, ParameterMissingError
+from langsuite.suit import ParameterMissingError
 from langsuite.suit import MessageHandler
 from langsuite.suit import Message
 from langsuite.suit.exceptions import StructuredException
@@ -62,11 +59,11 @@ class Basic2DHandler(MessageHandler):
             return result
             
         actions = "|".join(
-            (
+            filter(lambda x: len(x) > 0, (
                 "|".join(self.ACTIONS_WITH_NO_ARGS),
                 "|".join(self.ACTIONS_WITH_ONE_ARG),
                 "|".join(self.ACTIONS_WITH_TWO_ARGS),
-            )
+            ))
         )
         param_fmt = '([A-Za-z0-9_]+)'
         act_regex = fr"[Aa]ct(?:ion)?: *({actions}) *(?:\[{param_fmt}(?: *, *{param_fmt})?\])? *"
@@ -99,7 +96,7 @@ class Basic2DHandler(MessageHandler):
                     name=agent_name,
                     action='act'
                 )
-                action = {       
+                action = {
                     'action': 'Stop',
                     'task_type': self.task_type,
                     'target_status': self.target_status,
@@ -131,7 +128,7 @@ class Basic2DHandler(MessageHandler):
             if line.startswith('think:') or line.startswith('thought:'):
                 in_thought = True
             if in_thought:
-                thought += line + '\n'          
+                thought += line + '\n'
         if in_thought:
             message = Message(
                 role='assistant',
@@ -165,16 +162,17 @@ class Basic2DHandler(MessageHandler):
         if entity_info.get("temperature") in {"Hot", "Cold"}:
             s.append(entity_info["temperature"].lower())
 
-        prefix = ", ".join(s)
-        if len(prefix):
-            prefix += " "
+        attributes = ", ".join(s)
 
         if entity_info.get("isFilledWithLiquid") and not entity_info.get("isFilledWithLiquid") is True:
             suffix = f' filled with {entity_info["isFilledWithLiquid"]}'
         else:
             suffix = ""
         # XXX why use 'a', not 'the'? should I consider 'an' for aeiou?
-        s = f'a {prefix}{entity_info["index"]}{suffix}'
+        if len(attributes) or len(suffix):
+            s = f'a {entity_info["index"]} ({attributes}{suffix})'
+        else:
+            s = f'a {entity_info["index"]}'
         return s
 
     @staticmethod

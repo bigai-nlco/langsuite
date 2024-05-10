@@ -2,6 +2,9 @@ from collections import defaultdict
 import json
 from pathlib import Path
 from typing import Collection, Dict, Iterable, List, Optional, Sequence, Set, Tuple
+
+from networkx import NetworkXUnfeasible
+from langsuite.cli.cmd_cli import GameEndException
 from langsuite.shapes import Point2D, Polygon2D
 from shapely import Point
 
@@ -167,10 +170,13 @@ def ordering_objects(
     :param vertices: name of vertices, default is None (read vertices from edges)
     :return: ordered vertices
     """
-    G = nx.DiGraph()
-    G.add_nodes_from(vertices)
-    G.add_edges_from(dependencies)
-    order = list(nx.topological_sort(G))
+    try:
+        G = nx.DiGraph()
+        G.add_nodes_from(vertices)
+        G.add_edges_from(dependencies)
+        order = list(nx.topological_sort(G))
+    except NetworkXUnfeasible as e:
+        raise GameEndException("Invalid data with cycle") from e
     return order
 
 

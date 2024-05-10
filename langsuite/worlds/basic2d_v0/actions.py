@@ -17,6 +17,7 @@ from langsuite.suit.exceptions import (
 )
 from langsuite.suit import Action
 from langsuite.utils import logging
+from langsuite.worlds.basic2d_v0.grid_world import GridWorld
 from langsuite.worlds.basic2d_v0.world import Basic2DWorld_V0, Object2D
 from langsuite.worlds.basic2d_v0.physical_entity import LocateAt, PhysicalAgent
 
@@ -94,8 +95,14 @@ class InteractAction(InWorldAction):
         if not self.world.can_observe(self.agent, self.object):
             raise IllegalActionError({"object": self.object_index})
         if dist.modulus > self.agent.max_manipulate_distance:
-            print(dist.modulus, self.agent.max_manipulate_distance)
             raise UnexecutableWithSptialError({"distance": dist.modulus})
+
+    # HACK
+    @override
+    def make_info(self):
+        info = super().make_info()
+        info["inventory"] = self.world.make_id_list(self.agent.inventory)
+        return info
 
 
 class PickUp2D(InteractAction):
@@ -108,12 +115,7 @@ class PickUp2D(InteractAction):
                 raise InvalidActionError(
                     {
                         "object": self.object_index,
-                        "inventory": ",".join(
-                            map(
-                                self.world.object_name2index,
-                                map(lambda x: x.name, self.agent.inventory),
-                            )
-                        ),
+                        "inventory": self.world.make_id_list(self.agent.inventory),
                     }
                 ) from e
             else:
@@ -136,14 +138,7 @@ class PickUp2D(InteractAction):
         self.object.isPickedUp = True
         return (
             True,
-            {
-                "inventory": ",".join(
-                    map(
-                        self.world.object_name2index,
-                        map(lambda x: x.name, self.agent.inventory),
-                    )
-                )
-            },
+            {"inventory": self.world.make_id_list(self.agent.inventory)},
         )
 
 
@@ -157,7 +152,6 @@ class Drop2D(InteractAction):
         try:
             super()._executable_assert()
         except (UnexecutableWithSptialError, IllegalActionError) as e:
-            logging.logger.debug(f"{self.object_index} {e.param_dict}")
             # Do not need to care the distance of an invertory
             pass
         if self.object._locate_at.receptacle != self.agent:
@@ -170,8 +164,12 @@ class Drop2D(InteractAction):
         dist = deepcopy(self.agent.rotation)
         dist.rotate(self.rotate_degree)
         dist *= self.length
+        obj_pos = self.agent.position + dist
+        location = self.world.get_room(obj_pos)
         rel = LocateAt(
-            self.world.ground, self.world.timestamp, self.agent.position + dist
+            location,
+            self.world.timestamp,
+            self.world.distance_to_pos(location, obj_pos),
         )
         self.object.update_position(rel)
         self.object.isPickedUp = False
@@ -203,7 +201,7 @@ class Put2D(InteractAction):
             raise e
         dist = self.world.distance_to_pos(self.agent, self.receptacle)
         if dist.modulus > self.agent.max_manipulate_distance:
-            raise UnexecutableWithSptialError({"distance": dist.modulus})
+            raise LimitExceededError({"distance": dist.modulus})
         if not self.world.can_observe(self.agent, self.receptacle):
             raise IllegalActionError({"object": self.object_index})
         if not self.receptacle.receptacle:
@@ -387,28 +385,32 @@ class Cool(SetBoolAttrWith):
         ):
             raise UnexecutableWithAttrError({"premise_obj": self.receptacle.obj_type})
 
-# class GoTo(InteractAction):
-#     @override
-#     def _exec(self) -> Tuple[bool, Dict[str, object]]:
-#         # FIXME only work with single room
-#         it = iter(self.world.rooms.values())
-#         next(it)
-#         room = next(it)
-#         grid_world = GridWorld(room.geometry, self.agent.step_size)
-#         for x in self.world._objects.values():
-#             grid_world.add_object(x)
-#         grid_world.get_path(self.agent.position, self.object.position)
+@dataclass
+class GoTo(InWorldAction):
+    object_index: str
+    object: Object2D = field(init=False)
 
-#         return (
-#             True,
-#             {
-#                 "inventory": ",".join(
-#                     map(
-#                         self.world.object_name2index,
-#                         map(lambda x: x.name, self.agent.inventory),
-#                     )
-#                 )
-#             },
-#         )
+    @override
+    def _executable_assert(self):
+        super()._executable_assert()
+        try:
+            self.object = self.world.get_object(self.object_index)
+        except ParameterMissingError as e:
+            raise e
 
-
+    @override
+    def _exec(self) -> Tuple[bool, Dict[str, Any]]:
+        it = iter(self.world.rooms.values())
+        next(it)
+        room = next(it)
+        grid_world = GridWorld(
+            room.geometry, self.agent.step_size, self.agent.max_view_steps
+        )
+        for x in self.world._objects.values():
+            grid_world.add_object(x)
+        target_pos, target_dir, path = grid_world.get_path(
+            self.agent.position, self.agent.rotation, self.object.position
+        )
+        self.agent.position = target_pos
+        self.agent.rotation = target_dir
+        return (True, {"path": path})

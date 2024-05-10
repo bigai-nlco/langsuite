@@ -14,7 +14,7 @@ from langsuite.suit import LangSuiteAgent
 from langsuite.suit import Message
 from langsuite.suit.exceptions import StructuredException
 from langsuite.suit.message import MessageHandler
-from langsuite.utils import logging
+from langsuite.utils.logging import logger
 
 
 @AGENT_REGISTRY.register()
@@ -63,7 +63,7 @@ class ExpertAgent(LangSuiteAgent):
                 start_info = start_info.replace(
                     "{" + param + "}", str(self.body.__dict__[param])
                 )
-        logging.logger.debug(start_info)
+        logger.debug(start_info)
 
         if self.cmd_cli:
             message = Message(role="system", raw_content=str(start_info), name=self.name)
@@ -78,7 +78,7 @@ class ExpertAgent(LangSuiteAgent):
             },
             self.world.get_observation(self.name),
         )
-        logging.logger.debug("obs=%s", self.pack(semantic_fb_obs))
+        logger.debug("obs=%s", self.pack(semantic_fb_obs))
         return self.pack(semantic_fb_obs)
 
     @override
@@ -95,10 +95,10 @@ class ExpertAgent(LangSuiteAgent):
         status = sem_feedback.get("status", "default")
         if (template is None) or (param is None):
             try:
-                logging.logger.debug("action: %s with status: %s", action_name, status)
+                logger.debug("action: %s with status: %s", action_name, status)
                 source = random.choice(self.template[action_name][status])
             except KeyError:
-                logging.logger.debug(
+                logger.debug(
                     "status %s not in template, change to failure.default", status
                 )
                 source = random.choice(self.template[action_name]["failure.default"])
@@ -108,7 +108,6 @@ class ExpertAgent(LangSuiteAgent):
             if key == "observation":
                 template = template.replace("{observation}", self.pack_observation(sem_obs))  # type: ignore
             else:
-                assert key in sem_feedback
                 template = template.replace("{" + key + "}", str(sem_feedback[key]))  # type: ignore
         return template  # type: ignore
 

@@ -1,19 +1,17 @@
-from cProfile import label
-from collections import Counter, OrderedDict
+from collections import Counter
 from copy import deepcopy
-from os import replace
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Union
 from langsuite.utils.logging import logger
 from overrides import override
 from plotly.graph_objects import Figure
 from shapely.geometry import Polygon
+from shapely.geometry import MultiPoint
 
 from langsuite.shapes import Geometry, Line2D, Point2D, Polygon2D, Vector2D
-from shapely.geometry import MultiPoint
 from langsuite.suit.exceptions import NotRegisteredError, ParameterMissingError
 from langsuite.suit import Action, World
-from langsuite.utils import math_utils
 from langsuite.suit import WORLD_REGISTRY
+from langsuite.worlds.basic2d_v0.message_handler import Basic2DHandler
 from langsuite.worlds.basic2d_v0.physical_entity import (
     LocateAt,
     Object2D,
@@ -22,7 +20,7 @@ from langsuite.worlds.basic2d_v0.physical_entity import (
     Room2D,
 )
 import langsuite.worlds.basic2d_v0.utils as WUtils
-import networkx as nx
+
 
 @WORLD_REGISTRY.register()
 class Basic2DWorld_V0(World):
@@ -50,7 +48,7 @@ class Basic2DWorld_V0(World):
         try:
             return self._objects[self._object_index2id[index]]
         except KeyError as e:
-            raise ParameterMissingError(index in self._object_index2id) from e
+            raise ParameterMissingError({}) from e
 
     def _as_pos(self, obj_or_pos: Union[str, PhysicalEntity2D, Point2D]) -> Point2D:
         if isinstance(obj_or_pos, str):
@@ -185,13 +183,18 @@ class Basic2DWorld_V0(World):
 
     # XXX is inherit right?
     def iter_expand2index(
-        self, entity: PhysicalEntity2D, agent: Optional[PhysicalAgent], inherit_pos=False
+        self,
+        entity: PhysicalEntity2D,
+        agent: Optional[PhysicalAgent],
+        inherit_pos=False,
     ) -> Optional[Dict[str, object]]:
         if (agent is not None) and not (inherit_pos or self._in_vision(agent, entity)):
             return None
         assert hasattr(entity, "receptacle")
         if entity.receptacle:  # type: ignore
-            content = [self.iter_expand2index(child, agent) for child in entity.inventory]
+            content = [
+                self.iter_expand2index(child, agent) for child in entity.inventory
+            ]
             return {
                 "index": self.object_name2index(entity.name),
                 "content": list(filter(lambda x: x is not None, content)),
@@ -251,12 +254,33 @@ class Basic2DWorld_V0(World):
                 elif min_dis[0][0] == "right_distance":
                     right_objs.append(obj)
 
-
             self._observation[agent.name] = {
                 "middle_objs": self._chain_expand2index(agent, middle_objs),
                 "left_objs": self._chain_expand2index(agent, left_objs),
                 "right_objs": self._chain_expand2index(agent, right_objs),
             }
+
+    def get_look_around_observation(self, agent_name) -> str:
+        observed_objects = self._iter_get_independent_objects(self.ground, self.agents[agent_name])
+        description = [
+            {
+                "index": self.object_name2index(entity.name),
+                **entity.list_textual_attrs(),
+            }
+            for entity in observed_objects
+        ]
+        if len(description) == 0:
+            observation = "You are in the middle of a room. Looking quickly around you, you see nothing."
+        else:
+            prefix = (
+                "You are in the middle of a room. Looking quickly around you, you see "
+            )
+            described_collector = set()
+            observation = Basic2DHandler.pack_list_with_inner(
+                description, described_collector, prefix
+            )
+            observation += "."
+        return observation
 
     @override
     def get_observation(
@@ -268,7 +292,7 @@ class Basic2DWorld_V0(World):
     def step(
         self, agent_name: str, action_dict: dict
     ) -> Tuple[bool, Dict[str, object]]:
-#        print(action_dict)
+        #        print(action_dict)
         type_str = action_dict.pop("action")
         action_dict["agent"] = self.agents[agent_name]
         action_dict["world"] = self
@@ -279,7 +303,7 @@ class Basic2DWorld_V0(World):
             raise NotRegisteredError({"action": type_str}) from e
         result = action.exec()
         if getattr(action, "is_slice", False):
-            obj_index = result[1]['object']
+            obj_index = result[1]["object"]
             self.replace_sliced(obj_index)
         return result
 
@@ -287,14 +311,14 @@ class Basic2DWorld_V0(World):
         obj_name = self._object_index2id[obj_index]
         obj = self._objects.pop(obj_name)
         obj._locate_at.receptacle.remove_from_inventory(obj)
-        
+
         if obj.obj_type == "Egg":
             new_obj_type = "EggCracked"
         else:
             new_obj_type = f"{obj.obj_type}Sliced"
 
-        #TODO sliced pieces could have different pos and size
-        #Cracked Egg are not pieces.
+        # TODO sliced pieces could have different pos and size
+        # Cracked Egg are not pieces.
         SLICED_PIECES = 1 if new_obj_type == "EggCracked" else 10
         for i in range(SLICED_PIECES):
             new_obj = obj.copy()
@@ -311,12 +335,12 @@ class Basic2DWorld_V0(World):
     def render(self) -> Figure:
         fig = Figure()
         for room in self.rooms.values():
-            room.render(fig, label = room.name)
-        #TODO render windows and doors --- if they are implemented.
+            room.render(fig, label=room.name)
+        # TODO render windows and doors --- if they are implemented.
         for obj in self._objects.values():
-            obj.render(fig, label = self.object_name2index(obj.name))
+            obj.render(fig, label=self.object_name2index(obj.name))
         for agent in self.agents.values():
-            agent.render(fig, label = agent.name)
+            agent.render(fig, label=agent.name)
         fig.update_yaxes(scaleanchor="x", scaleratio=1)
         fig.update_layout(showlegend=False)
         fig.show()
@@ -383,7 +407,11 @@ class Basic2DWorld_V0(World):
         # TODO HACK faucet -> basin, knob -> burner ?
         def locate_by_matching(X: Iterable[Object2D], Y: Iterable[Object2D]):
             DIST_THRESHOLD = 0.5
-            edges = [(x.obj_name, y.obj_name, (x.position - y.position).modulus) for x in X for y in Y]
+            edges = [
+                (x.obj_name, y.obj_name, (x.position - y.position).modulus)
+                for x in X
+                for y in Y
+            ]
             edges = list(filter(lambda x: x[2] <= DIST_THRESHOLD, edges))
             if len(edges) == 0:
                 return
@@ -393,17 +421,23 @@ class Basic2DWorld_V0(World):
                 oy = world._objects[y]
                 rel = LocateAt(oy, ox._timestamp, ox.position - oy.position)
                 ox.update_position(rel)
-                if ox.obj_type == 'Faucet':
-                    setattr(oy, 'isFilledWithLiquid', getattr('oy', 'isFilledWithLiquid', False))
+                if ox.obj_type == "Faucet":
+                    setattr(
+                        oy,
+                        "isFilledWithLiquid",
+                        getattr("oy", "isFilledWithLiquid", False),
+                    )
 
-        #HACK locate faucets to closest basins.
-        faucets = filter(lambda x: x.obj_type == 'Faucet', world._objects.values())
-        basins = filter(lambda x: x.obj_type.endswith('Basin'), world._objects.values())
+        # HACK locate faucets to closest basins.
+        faucets = filter(lambda x: x.obj_type == "Faucet", world._objects.values())
+        basins = filter(lambda x: x.obj_type.endswith("Basin"), world._objects.values())
         locate_by_matching(faucets, basins)
 
-        #HACK locate stove knobs, it will be better to read their relation from THOR (if possible)
-        knobs = filter(lambda x: x.obj_type == 'StoveKnob', world._objects.values())
-        burners = filter(lambda x: x.obj_type == 'StoveBurners', world._objects.values())
+        # HACK locate stove knobs, it will be better to read their relation from THOR (if possible)
+        knobs = filter(lambda x: x.obj_type == "StoveKnob", world._objects.values())
+        burners = filter(
+            lambda x: x.obj_type == "StoveBurners", world._objects.values()
+        )
         locate_by_matching(knobs, burners)
         # Objects done.
 
@@ -427,10 +461,10 @@ class Basic2DWorld_V0(World):
         for ag_data in agents_data:
             agent_id = ag_data["agentId"]
             task_cfg = task_spec_agents_cfg[agent_id]
-#            ag_aov = task_cfg.get("view_angle", ag_data.get("view_angle"))
-#            if ag_aov is None:
+            #            ag_aov = task_cfg.get("view_angle", ag_data.get("view_angle"))
+            #            if ag_aov is None:
             ag_fl = task_cfg.get("focal_length")
-            
+
             ag_rot = Vector2D(0, 1)
             ag_rot.rotate(ag_data["rotation"])
             pa = PhysicalAgent(
@@ -539,7 +573,5 @@ class Basic2DWorld_V0(World):
         children = object_info["children"]
         if children is not None:
             for child in children:
-                cls.iter_create_object(
-                    child, assets_data, world, o, obj_collector
-                )
+                cls.iter_create_object(child, assets_data, world, o, obj_collector)
         obj_collector[obj_id] = o
