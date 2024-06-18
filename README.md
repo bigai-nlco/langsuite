@@ -231,11 +231,11 @@ agents:
 ## 📝 Citation
 If you find our work useful, please cite
 ```bibtex
-@misc{langsuite2023,
-  author    = {Zilong Zheng, Zixia Jia, Mengmeng Wang, Wentao Ding, Baichen Tong, Songchun Zhu},
+@inproceedings{langsuite2023,
+  author    = {Jia, Zixia and Wang, Mengmeng and Ding, Wentao and Tong, Baichen and Zheng, Zilong},
   title     = {LangSuit⋅E: Controlling, Planning, and Interacting with Large Language Models in Embodied Text Environments},
   year      = {2023},
-  publisher = {GitHub},
+  booktitle = {Findings of the 62nd Annual Meeting of the Association for Computational Linguistics (ACL 2024)},
   url       = {https://github.com/bigai-nlco/langsuite}
 }
 ```
