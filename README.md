@@ -232,7 +232,7 @@ agents:
 If you find our work useful, please cite
 ```bibtex
 @inproceedings{langsuite2023,
-  author    = {Jia, Zixia and Wang, Mengmeng and Ding, Wentao and Tong, Baichen and Zheng, Zilong},
+  author    = {Jia, Zixia and Wang, Mengmeng and Tong, Baichen and Zheng, Zilong},
   title     = {LangSuit⋅E: Controlling, Planning, and Interacting with Large Language Models in Embodied Text Environments},
   year      = {2023},
   booktitle = {Findings of the 62nd Annual Meeting of the Association for Computational Linguistics (ACL 2024)},
