@@ -24,7 +24,7 @@ class Geometry:
 class Point2D(Geometry):
     def __init__(self, *args) -> None:
         if len(args) > 2:
-            raise TypeError(f"Point2D takes at most 2 arguements ({len(args)} given)")
+            raise TypeError(f"Point2D takes at most 2 arguments ({len(args)} given)")
         elif len(args) == 2:
             self.x, self.y = float(args[0]), float(args[1])
         elif len(args) == 1:
